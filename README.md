@@ -8,10 +8,10 @@ Juego bilingüe (español / English) para aprender letras y a contar mientras re
    - **Letras:** "León empieza con la letra L. Toca la L."
    - **Contar:** toca cada animal para contarlo en voz alta y elige el número.
    Nunca se pierde: si te equivocas, "¡Casi!", y después de dos intentos el juego te muestra la respuesta.
-3. **🔨 Construye el arca a escala real (Génesis 6:14-22):** cada rescate te da 25 de madera 🪵. Con tu monito (◀ ▶ para caminar, ⬆ para saltar o subir escaleras, ⬇ para bajar) recorres la obra y tocas las líneas blancas del plano para poner cada pieza. El arca mide **300 codos de largo y 30 de alto** (1 bloque = 5 codos), con una regla para medirla. Cinco misiones, cada una con lo que Dios le dijo a Noé:
+3. **🔨 Construye el arca a escala real (Génesis 6:14-22):** cada rescate te da 25 de madera 🪵 (y 3 aciertos seguidos a la primera dan +10). Con tu monito (◀ ▶ para caminar, ⬆ para saltar o subir escaleras, ⬇ para bajar) recorres la obra: **el monito martilla solo lo que tiene cerca**, también el piso que tiene encima. También puedes tocar las líneas blancas. Cada pieza seguida suena más aguda (🔥 combo), cada 25 % de la misión hay festejo, y por el mundo flotan ⭐ y 🪵 para atrapar. Tus animales rescatados pasean junto al arca: tócalos. El arca mide **300 codos de largo y 30 de alto** (1 bloque = 5 codos), con una regla para medirla. Cinco misiones, cada una con lo que Dios le dijo a Noé:
    1. El piso de abajo.
-   2. Las paredes y la puerta al costado.
-   3. Tres pisos y sus escaleras.
+   2. Tres pisos y sus escaleras.
+   3. Las paredes y la puerta al costado.
    4. El techo y la ventana arriba.
    5. Brea por dentro y por fuera.
    Al terminar: "Noé hizo todo lo que Dios le mandó", llueve, sale el arcoíris 🌈 y se cuenta la historia. 🔭 muestra el arca completa.

@@ -430,7 +430,7 @@ function entrarMundo() {
   $('bArca').classList.toggle('pulsa', E.madera >= MADERA_RESCATE * 2 && E.mision < MISIONES.length);
   if (!E.bienvenida) {
     E.bienvenida = true; guardar();
-    di('Ayuda a Noé a rescatar a los animales. ¡Toca los árboles para buscarlos!', 'Help Noah rescue the animals. Tap the trees to find them!');
+    di('¡Toca los árboles y rescata animales!', 'Tap the trees and rescue animals!');
   }
 }
 $('bArca').onclick = e => { e.stopPropagation(); entrarObra(); };
@@ -452,9 +452,7 @@ function abrirReto(arbusto) {
     ver.innerHTML = `<div class="animal-grande">${a.emo}</div><div class="palabra">${resaltar ? `<b>${palabra[0]}</b>${palabra.slice(1)}` : palabra}</div>`;
     const otras = mezclar([...LETRAS].filter(c => c !== letra)).slice(0, numOpciones() - 1);
     mezclar([letra, ...otras]).forEach(c => opc.appendChild(botonOpcion(c, c === letra)));
-    const un = a.g === 'f' ? 'una' : 'un';
-    reto.pregunta = l === 'es' ? `¡Mira, ${un} ${palabra.toLowerCase()}! ${palabra} empieza con la letra ${letra}. Toca la ${letra}.`
-                               : `Look, a ${palabra.toLowerCase()}! ${palabra} starts with the letter ${letra}. Tap the ${letra}.`;
+    reto.pregunta = l === 'es' ? `${palabra}. ¡Toca la ${letra}!` : `${palabra}. Tap the ${letra}!`;
     $('retoPregunta').textContent = l === 'es' ? `Toca la letra ${letra}` : `Tap the letter ${letra}`;
   } else {
     const n = 1 + azar(maxContar());
@@ -477,7 +475,7 @@ function abrirReto(arbusto) {
     mezclar([n, ...otras]).forEach(v => opc.appendChild(botonOpcion(v, v === n, v <= 5 ? '●'.repeat(v) : '')));
     const plural = n === 1 ? a[l][0].toLowerCase() : a[l][1];
     const cuantos = a.g === 'f' ? 'Cuántas' : 'Cuántos';
-    reto.pregunta = l === 'es' ? `¿${cuantos} ${a[l][1]} hay? Tócal${a.g === 'f' ? 'a' : 'o'}s para contarl${a.g === 'f' ? 'a' : 'o'}s.` : `How many ${a[l][1]}? Tap them to count.`;
+    reto.pregunta = l === 'es' ? `¿${cuantos} ${a[l][1]}? ¡Tócal${a.g === 'f' ? 'a' : 'o'}s!` : `How many ${a[l][1]}? Tap them!`;
     reto.plural = plural;
     $('retoPregunta').textContent = l === 'es' ? `¿${cuantos} hay?` : `How many?`;
   }
@@ -504,34 +502,40 @@ function responder(b, correcta) {
   b.classList.add('bien'); sfx.bien();
   $('retoOpciones').querySelectorAll('button').forEach(x => x.disabled = true);
   if (reto.tipo === 'letra') {
-    decir([{ l, t: l === 'es' ? `¡Muy bien! ${a.es[0]} empieza con ${reto.respuesta}.` : `Great job! ${a.en[0]} starts with ${reto.respuesta}.` }]);
+    decir([{ l, t: l === 'es' ? `¡Sí! ${reto.respuesta}, de ${a.es[0]}.` : `Yes! ${reto.respuesta}, for ${a.en[0]}.` }]);
   } else {
     const n = reto.respuesta, seq = Array.from({ length: n }, (_, k) => k + 1).join(', ');
-    decir([{ l, t: l === 'es' ? `${seq}. ¡${n} ${reto.plural}! ¡Muy bien!` : `${seq}. ${n} ${reto.plural}! Great job!` }]);
+    decir([{ l, t: l === 'es' ? `${seq}. ¡${n}!` : `${seq}. ${n}!` }]);
   }
-  const primera = reto.intentos === 0, arbusto = reto.arbusto;
+  const primera = reto.intentos === 0, arbusto = reto.arbusto, espera = reto.tipo === 'contar' ? 1800 : 1300;
   reto = null;
-  setTimeout(() => { $('reto').classList.remove('abierta'); rescatar(arbusto, primera); }, 2200);
+  setTimeout(() => { $('reto').classList.remove('abierta'); rescatar(arbusto, primera); }, espera);
 }
 
 // ---------- Rescate y premios ----------
 const desbloqueados = () => [...CARAS, ...GORROS].filter(([, p]) => p && p <= E.estrellas).map(([e]) => e);
+let racha = 0, tFestejo = null;
 function rescatar(arbusto, primera) {
   const a = arbusto.animal, antes = desbloqueados();
   E.coleccion[a.id] = (E.coleccion[a.id] || 0) + 1;
   const ganadas = primera ? 2 : 1;
-  E.estrellas += ganadas; E.madera += MADERA_RESCATE; guardar(); barra();
+  racha = primera ? racha + 1 : 0;
+  const bonoRacha = racha > 0 && racha % 3 === 0 ? 10 : 0;   // 3 aciertos seguidos a la primera: madera extra
+  E.estrellas += ganadas; E.madera += MADERA_RESCATE + bonoRacha; guardar(); barra();
+  if (bonoRacha) setTimeout(() => toast(T(`🔥 ¡${racha} seguidos! +${bonoRacha} 🪵`, `🔥 ${racha} in a row! +${bonoRacha} 🪵`)), 600);
+  clearTimeout(tFestejo); tFestejo = setTimeout(() => $('festejo').classList.contains('abierta') && $('festejoSeguir').click(), 3000);   // sigue solo
   arbusto.el.remove(); arbustos = arbustos.filter(b => b !== arbusto);
   const los = a.g === 'f' ? 'las' : 'los';
   $('festejoPareja').textContent = a.emo + a.emo;
   $('festejoTexto').textContent = T(`¡Rescataste a ${los} ${a.es[1]}!`, `You rescued the ${a.en[1]}!`);
-  $('festejoEstrellas').textContent = `+${ganadas} ⭐   +${MADERA_RESCATE} 🪵`;
+  $('festejoEstrellas').textContent = `+${ganadas} ⭐   +${MADERA_RESCATE + bonoRacha} 🪵`;
   $('festejo').classList.add('abierta');
   sfx.fanfarria();
   setTimeout(() => di(`¡Rescataste a ${los} ${a.es[1]}!`, `You rescued the ${a.en[1]}!`), 300);
   desbloqueados().filter(e => !antes.includes(e)).forEach((e, k) => setTimeout(() => toast(T(`🎁 ¡Nuevo premio: ${e}!`, `🎁 New prize: ${e}!`)), 1200 + k * 2800));
 }
 $('festejoSeguir').onclick = () => {
+  clearTimeout(tFestejo);
   $('festejo').classList.remove('abierta');
   entrarMundo();
   if (E.mision < MISIONES.length && E.madera >= MADERA_RESCATE * 2) toast(T(`🔨 ¡Tienes ${E.madera} 🪵! Ve a construir el arca.`, `🔨 You have ${E.madera} 🪵! Go build the ark.`));
@@ -615,34 +619,44 @@ const COLS = 60, FILAS = 6, MARGEN = 10, MUNDO_W = COLS + MARGEN * 2, MADERA_RES
 const PLANO = [];   // cada pieza: columna, fila, tipo y la misión a la que pertenece
 (() => {
   const add = (c, r, tipo, m) => PLANO.push({ c, r, tipo, m, hecho: false, brea: false });
+  // (el orden de los add no cambia: el progreso guardado depende de él)
   for (let c = 1; c < COLS - 1; c++) add(c, 0, 'piso', 0);                       // 1. piso de abajo
-  add(0, 0, 'puerta', 1); add(0, 1, 'puerta', 1);                                 // 2. puerta y paredes
-  for (let r = 2; r < FILAS; r++) add(0, r, 'casco', 1);
-  for (let r = 0; r < FILAS; r++) add(COLS - 1, r, 'casco', 1);
-  for (const [fila, hueco] of [[2, 6], [4, COLS - 7]])                            // 3. tres pisos y escaleras
-    for (let c = 1; c < COLS - 1; c++) if (c !== hueco) add(c, fila, 'piso', 2);
-  for (let r = 0; r <= 2; r++) add(6, r, 'escalera', 2);
-  for (let r = 2; r <= 4; r++) add(COLS - 7, r, 'escalera', 2);
+  add(0, 0, 'puerta', 2); add(0, 1, 'puerta', 2);                                 // 3. puerta y paredes
+  for (let r = 2; r < FILAS; r++) add(0, r, 'casco', 2);
+  for (let r = 0; r < FILAS; r++) add(COLS - 1, r, 'casco', 2);
+  for (const [fila, hueco] of [[2, 6], [4, COLS - 7]])                            // 2. tres pisos y escaleras
+    for (let c = 1; c < COLS - 1; c++) if (c !== hueco) add(c, fila, 'piso', 1);
+  for (let r = 0; r <= 2; r++) add(6, r, 'escalera', 1);
+  for (let r = 2; r <= 4; r++) add(COLS - 7, r, 'escalera', 1);
   for (let c = 0; c < COLS; c++) add(c, FILAS - 1, c >= 25 && c < 35 ? 'ventana' : 'techo', 3);   // 4. techo y ventana
 })();
+// Los pisos van antes que las paredes para que el monito alcance a construir las partes altas caminando
 const llevaBrea = p => p.tipo === 'casco' || p.tipo === 'techo' || (p.tipo === 'piso' && p.r === 0);  // 5. brea
 const MISIONES = [
+  // corto: lo que se dice al empezar (frases cortas para no perder la atención); es/en: la explicación completa del botón 🔊
   { ref: 'Génesis 6:14-15', tit: ['El piso de abajo', 'The bottom floor'],
+    corto: ['Dios le dijo a Noé: ¡haz el arca! Primero, el piso.', 'God told Noah: build the ark! First, the floor.'],
     es: 'Dios le dijo a Noé: «Haz un arca de madera.» Empieza por el piso de abajo. ¡El arca mide 300 codos de largo! Es más larga que una cancha de fútbol.',
     en: 'God told Noah: “Make an ark of wood.” Start with the bottom floor. The ark is 300 cubits long! That is longer than a soccer field.' },
-  { ref: 'Génesis 6:16', tit: ['Las paredes y la puerta', 'The walls and the door'],
-    es: 'Ahora las paredes. Dios le dijo a Noé: «Pon la puerta al costado del arca.»',
-    en: 'Now the walls. God told Noah: “Put the door in the side of the ark.”' },
   { ref: 'Génesis 6:16', tit: ['Tres pisos', 'Three decks'],
+    corto: ['Dios dijo: ¡tres pisos! Camina y sube las escaleras.', 'God said: three decks! Walk and climb the ladders.'],
     es: 'Dios le dijo a Noé: «Hazle tres pisos: abajo, en medio y arriba.» Pon los pisos y las escaleras.',
     en: 'God told Noah: “Make it with a lower, second and third deck.” Build the floors and the ladders.' },
+  { ref: 'Génesis 6:16', tit: ['Las paredes y la puerta', 'The walls and the door'],
+    corto: ['Ahora las paredes y la puerta.', 'Now the walls and the door.'],
+    es: 'Ahora las paredes. Dios le dijo a Noé: «Pon la puerta al costado del arca.»',
+    en: 'Now the walls. God told Noah: “Put the door in the side of the ark.”' },
   { ref: 'Génesis 6:15-16', tit: ['El techo y la ventana', 'The roof and the window'],
+    corto: ['¡Sube y pon el techo!', 'Climb up and build the roof!'],
     es: 'Dios le dijo a Noé: «Hazle una ventana arriba.» Pon el techo. ¡El arca mide 30 codos de alto!',
     en: 'God told Noah: “Make a window at the top.” Build the roof. The ark is 30 cubits high!' },
   { ref: 'Génesis 6:14', tit: ['Brea por dentro y por fuera', 'Pitch inside and out'], brea: true,
+    corto: ['¡Pinta el arca con brea!', 'Paint the ark with pitch!'],
     es: 'Dios le dijo a Noé: «Cúbrela con brea por dentro y por fuera», para que no entre el agua. ¡Pinta el arca con brea!',
     en: 'God told Noah: “Cover it with pitch inside and out,” so the water stays out. Paint the ark with pitch!' },
 ];
+const ANIMOS = [['¡Muy bien!', 'Great job!'], ['¡Genial!', 'Awesome!'], ['¡Así se hace!', 'Way to go!'], ['¡Increíble!', 'Amazing!']];
+const animo = () => { const [es, en] = ANIMOS[azar(ANIMOS.length)]; di(es, en); };
 const FIN_OBRA = { ref: 'Génesis 6:22',
   es: '¡Lo lograste! Noé hizo todo lo que Dios le mandó.', en: 'You did it! Noah did everything God commanded him.' };
 const piezasMision = i => MISIONES[i].brea ? PLANO.filter(llevaBrea) : PLANO.filter(p => p.m === i);
@@ -655,6 +669,8 @@ function avanceTotal() {
 }
 function guardarObra() { E.obra = PLANO.map(p => (p.hecho ? 1 : 0) + (p.brea ? 2 : 0)).join(''); guardar(); }
 if (E.obra && E.obra.length === PLANO.length) [...E.obra].forEach((ch, i) => { PLANO[i].hecho = !!(+ch & 1); PLANO[i].brea = !!(+ch & 2); });
+// La misión actual es la primera sin terminar (así el progreso guardado sigue bien aunque cambie el orden)
+{ const i = MISIONES.findIndex((_, k) => { const [h, t] = avanceMision(k); return h < t; }); E.mision = i < 0 ? MISIONES.length : i; }
 
 // Caja de cada pieza en bloques del mundo (y hacia arriba; 0 = el suelo)
 function caja(p) {
@@ -785,7 +801,17 @@ function dibujarObra(dt) {
   const cielo = cx.createLinearGradient(0, 0, 0, baseY);
   cielo.addColorStop(0, '#8fd3ff'); cielo.addColorStop(1, '#e0f6ff');
   cx.fillStyle = cielo; cx.fillRect(0, 0, W2, baseY);
+  const ahora = performance.now() / 1000;
   emoji('☀️', W2 - 60, 150, 56);
+  for (let k = 0; k < 4; k++) {   // nubes y un pájaro que cruzan el cielo
+    const x = ((ahora * (12 + k * 5) + k * 260) % (W2 + 300)) - 150;
+    emoji('☁️', x, 190 + k * 45, 60 + k * 10);
+  }
+  emoji('🐦', W2 + 60 - ((ahora * 70) % (W2 + 140)), 230 + Math.sin(ahora * 3) * 12, 30);
+  // Sacudida suave al martillar
+  sacudida = Math.max(0, sacudida - dt);
+  cx.save();
+  if (sacudida > 0) cx.translate((Math.random() - 0.5) * 4, (Math.random() - 0.5) * 4);
   cx.fillStyle = '#6cc070'; cx.fillRect(0, baseY, W2, H2 - baseY);
   cx.fillStyle = '#4e9a52'; cx.fillRect(0, baseY, W2, 6);
   // Regla en codos (cada 10 bloques = 50 codos)
@@ -815,43 +841,132 @@ function dibujarObra(dt) {
   // Astillas al construir
   astillas = astillas.filter(a => (a.vida -= dt) > 0);
   for (const a of astillas) { a.x += a.vx * dt; a.y += a.vy * dt; a.vy -= 12 * dt; cx.fillStyle = a.col; cx.fillRect(sx(a.x) - 3, sy(a.y) - 3, 6, 6); }
+  // Premios que flotan y animales que pasean
+  for (const pr of premios) emoji(pr.tipo === 'estrella' ? '⭐' : '🪵', sx(pr.x), sy(pr.y + Math.sin(ahora * 3 + pr.fase) * 0.12), TS * 0.55);
+  for (const p of paseantes) {
+    cx.save(); cx.translate(sx(p.x), sy(0.45 + Math.sin(p.salto * Math.PI) * 0.8 + Math.abs(Math.sin(ahora * 6 + p.x)) * 0.05));
+    if (p.dir > 0) cx.scale(-1, 1);   // los emojis de animales miran a la izquierda
+    emoji(p.a.emo, 0, 0, TS * 0.8); cx.restore();
+  }
   dibujarMono();
+  // Textos que suben: +1 ⭐, 🔥 x10
+  textos = textos.filter(t => (t.vida -= dt * 0.8) > 0);
+  cx.textAlign = 'center'; cx.textBaseline = 'middle';
+  for (const t of textos) {
+    t.y += dt * 1.2;
+    cx.globalAlpha = Math.min(1, t.vida * 2);
+    cx.font = `900 ${Math.max(18, TS * 0.45)}px ${EMOJI}`; cx.lineWidth = 4; cx.strokeStyle = '#0006';
+    cx.strokeText(t.t, sx(t.x), sy(t.y)); cx.fillStyle = t.col; cx.fillText(t.t, sx(t.x), sy(t.y));
+  }
+  cx.globalAlpha = 1;
+  cx.restore();
 }
 function bucleObra(t) {
   if (!enObra) return;
   const dt = Math.min(0.05, (t - tAnterior) / 1000 || 0); tAnterior = t;
-  moverMono(dt); dibujarObra(dt);
+  moverMono(dt); autoConstruir(dt); sembrarPremios(dt); recogerPremios(); moverPaseantes(dt);
+  dibujarObra(dt);
   requestAnimationFrame(bucleObra);
 }
 
-// ---------- Construir tocando el plano ----------
-let tSonido = 0, tAvisoMadera = 0, misionDicha = -1;
-function piezaCerca(wx, wy) {   // la pieza pendiente de la misión más cercana al dedo (máx. 1 bloque)
+// ---------- Construir: el monito construye al pasar, o tocando el plano ----------
+let tSonido = 0, tAvisoMadera = 0, misionDicha = -1, tAuto = 0, combo = 0, tCombo = 0, sacudida = 0, textos = [];
+const NOTAS_COMBO = [523, 587, 659, 784, 880, 1047, 1175, 1319, 1568, 1760];
+const pendiente = (p, m) => m.brea ? llevaBrea(p) && !p.brea : p.m === E.mision && !p.hecho;
+function piezaCerca(wx, wy, rx, ry = rx) {   // la pieza pendiente de la misión más cercana, dentro de un óvalo rx × ry
   const m = MISIONES[E.mision]; if (!m) return null;
   let mejor = null, dmin = 1;
   for (const p of PLANO) {
-    if (m.brea ? !(llevaBrea(p) && !p.brea) : (p.m !== E.mision || p.hecho)) continue;
-    const b = caja(p), d = Math.hypot(b.x + b.w / 2 - wx, b.y + b.h / 2 - wy);
+    if (!pendiente(p, m)) continue;
+    const b = caja(p), d = Math.hypot((b.x + b.w / 2 - wx) / rx, (b.y + b.h / 2 - wy) / ry);
     if (d < dmin) { dmin = d; mejor = p; }
   }
   return mejor;
 }
-function construirEn(px, py) {
-  const wx = px / TS + camX, wy = (baseY - py) / TS, p = piezaCerca(wx, wy), m = MISIONES[E.mision];
-  if (!p) return;
+function flotar(t, x, y, col = '#fff') { textos.push({ t, x, y, col, vida: 1 }); }
+function ponerPieza(p) {
+  const m = MISIONES[E.mision], [hAntes, total] = avanceMision(E.mision);
   if (m.brea) p.brea = true;
   else {
-    if (E.madera <= 0) { sinMadera(); return; }
+    if (E.madera <= 0) { sinMadera(); return false; }
     p.hecho = true; E.madera--;
-    if (solida(p) && solidosEn(mono.x - mono.w / 2, mono.y, mono.w, mono.h).length) mono.y = caja(p).y + caja(p).h;   // no dejar al monito atorado
+    const b = caja(p);   // no dejar al monito atorado dentro de lo que se acaba de construir
+    if (solida(p) && mono.x + mono.w / 2 > b.x && mono.x - mono.w / 2 < b.x + b.w && mono.y < b.y + b.h && mono.y + mono.h > b.y) {
+      if (b.h < 0.5) { mono.y = b.y + b.h; mono.vy = 0; }                                       // piso o techo: queda encima
+      else mono.x = mono.x < b.x + b.w / 2 ? b.x - mono.w / 2 - 0.01 : b.x + b.w + mono.w / 2 + 0.01;   // pared: a un lado
+    }
   }
-  const b = caja(p);
-  for (let k = 0; k < 5; k++) astillas.push({ x: b.x + 0.5, y: b.y + b.h, vx: (Math.random() - 0.5) * 4, vy: 2 + Math.random() * 3, vida: 0.6, col: m.brea ? '#1c130d' : '#c08a5a' });
-  const ahora = performance.now();
-  if (ahora - tSonido > 90) { m.brea ? tono(200, 0, 0.08, 'sine', 0.1) : sfx.martillo(); tSonido = ahora; }
+  const b = caja(p), ahora = performance.now();
+  for (let k = 0; k < 6; k++) astillas.push({ x: b.x + 0.5, y: b.y + b.h, vx: (Math.random() - 0.5) * 5, vy: 2 + Math.random() * 4, vida: 0.6, col: m.brea ? '#1c130d' : ['#c08a5a', '#fcd34d', '#a0632e'][k % 3] });
+  // Combo: cada pieza seguida suena una nota más aguda
+  combo = ahora - tCombo < 1200 ? combo + 1 : 1; tCombo = ahora;
+  if (ahora - tSonido > 70) {
+    tono(NOTAS_COMBO[Math.min(combo - 1, NOTAS_COMBO.length - 1)], 0, 0.15, 'triangle', 0.12);
+    if (!m.brea) tono(110, 0, 0.06, 'square', 0.06);
+    tSonido = ahora;
+  }
+  if (combo >= 5 && combo % 5 === 0) flotar(`🔥 x${combo}`, mono.x, mono.y + 2, '#fde047');
+  sacudida = 0.12;
+  // Mini festejo cada 25 % de la misión
+  const h = hAntes + 1;
+  if (h < total && Math.floor(h / total * 4) > Math.floor(hAntes / total * 4)) {
+    E.estrellas++; animo(); sfx.bien();
+    flotar('+1 ⭐', mono.x, mono.y + 2.2, '#fde047');
+    for (let k = 0; k < 14; k++) astillas.push({ x: mono.x, y: mono.y + 1, vx: (Math.random() - 0.5) * 8, vy: 3 + Math.random() * 5, vida: 0.9, col: ['#fde047', '#f472b6', '#60a5fa', '#4ade80'][k % 4] });
+  }
   pintarMision();
-  const [h, t] = avanceMision(E.mision);
-  if (h === t) completarMision(); else if (h % 10 === 0) guardarObra();
+  if (h === total) completarMision(); else if (h % 10 === 0) guardarObra();
+  return true;
+}
+function construirEn(px, py) {
+  const p = piezaCerca(px / TS + camX, (baseY - py) / TS, 1);
+  if (p) ponerPieza(p);
+}
+function autoConstruir(dt) {   // el monito martilla lo que tiene cerca, también el piso que tiene encima
+  if ((tAuto -= dt) > 0) return;
+  const p = piezaCerca(mono.x, mono.y + 0.65, 1.25, 1.9);
+  if (!p) return;
+  tAuto = ponerPieza(p) ? 0.12 : 0.6;
+}
+
+// ---------- Mundo vivo: premios flotantes, animales y nubes ----------
+let premios = [], paseantes = [], tPremio = 0;
+function sembrarPremios(dt) {
+  if ((tPremio -= dt) > 0 || premios.length >= 6) return;
+  tPremio = 2.5;
+  const dentro = E.mision >= 2 && Math.random() < 0.6;   // con pisos hechos, también aparecen dentro del arca
+  const piso = [0.2, 2.2, 4.2][azar(3)];
+  const x = dentro ? MARGEN + 2 + Math.random() * (COLS - 4) : MARGEN - 8 + Math.random() * (COLS + 16);
+  const y = (dentro ? piso : 0) + [0.9, 1.6, 2.2][azar(dentro ? 2 : 3)];
+  premios.push({ x, y, tipo: Math.random() < 0.3 ? 'madera' : 'estrella', fase: Math.random() * 6 });
+}
+function recogerPremios() {
+  const cxm = mono.x, cym = mono.y + 0.65;
+  premios = premios.filter(pr => {
+    if (Math.hypot(pr.x - cxm, pr.y - cym) > 0.8) return true;
+    if (pr.tipo === 'estrella') { E.estrellas++; flotar('+1 ⭐', pr.x, pr.y + 0.5, '#fde047'); tono(1319, 0, 0.12, 'sine', 0.12); tono(1760, 0.08, 0.18, 'sine', 0.12); }
+    else { E.madera += 3; flotar('+3 🪵', pr.x, pr.y + 0.5, '#fbbf24'); tono(784, 0, 0.1, 'triangle', 0.12); tono(1047, 0.08, 0.15, 'triangle', 0.12); }
+    barra(); pintarMision(); return false;
+  });
+}
+function prepararPaseantes() {   // los animales rescatados esperan y caminan junto al arca
+  const ids = ANIMALES.filter(a => E.coleccion[a.id]);
+  paseantes = ids.slice(-8).map((a, k) => ({ a, x: MARGEN + COLS + 1.5 + k * 1.1, dir: Math.random() < 0.5 ? -1 : 1, salto: 0 }));
+}
+function moverPaseantes(dt) {
+  for (const p of paseantes) {
+    p.x += p.dir * 0.6 * dt;
+    if (p.x < MARGEN + COLS + 1 || p.x > MUNDO_W - 0.6) p.dir *= -1;
+    if (Math.random() < dt * 0.15) p.dir *= -1;
+    p.salto = Math.max(0, p.salto - dt * 2);
+  }
+}
+function tocarPaseante(px, py) {
+  const wx = px / TS + camX, wy = (baseY - py) / TS;
+  const p = paseantes.find(p => Math.abs(p.x - wx) < 0.6 && wy < 1.4 && wy > -0.2);
+  if (!p) return false;
+  p.salto = 1; sfx.pop(); di(p.a.es[0], p.a.en[0]);
+  return true;
 }
 function sinMadera() {
   const ahora = performance.now();
@@ -869,7 +984,7 @@ function completarMision() {
   if (E.mision >= MISIONES.length) { setTimeout(finalArca, 1500); return; }
   setTimeout(decirMision, 1600);
 }
-function decirMision() { const m = MISIONES[E.mision]; if (m) { misionDicha = E.mision; di(m.es, m.en); } }
+function decirMision() { const m = MISIONES[E.mision]; if (m) { misionDicha = E.mision; di(...m.corto); } }
 function pintarMision() {
   const m = MISIONES[E.mision], tarjeta = $('mision');
   barra();
@@ -884,10 +999,14 @@ function pintarMision() {
   tarjeta.querySelector('.ref').textContent = `📜 ${m.ref} · ${T('Misión', 'Mission')} ${E.mision + 1}/${MISIONES.length}`;
   tarjeta.querySelector('.tit').textContent = T(m.tit[0], m.tit[1]);
   tarjeta.querySelector('.barraAv span').style.width = (h / t * 100) + '%';
-  tarjeta.querySelector('.cuenta').textContent = `${h} / ${t}` + (m.brea ? '  ⚫ ' + T('toca para pintar con brea', 'tap to paint with pitch') : `  ·  🪵 ${E.madera}  ·  ` + T('toca las líneas blancas', 'tap the white lines'));
+  tarjeta.querySelector('.cuenta').textContent = `${h} / ${t}` + (m.brea ? '  ⚫ ' + T('camina o toca para pintar', 'walk or tap to paint') : `  ·  🪵 ${E.madera}  ·  ` + T('🐵 camina cerca o toca', '🐵 walk near or tap'));
 }
 let dedoAbajo = false;
-lienzo.addEventListener('pointerdown', e => { audio(); dedoAbajo = true; lienzo.setPointerCapture?.(e.pointerId); construirEn(e.clientX, e.clientY); });
+lienzo.addEventListener('pointerdown', e => {
+  audio();
+  if (tocarPaseante(e.clientX, e.clientY)) return;
+  dedoAbajo = true; lienzo.setPointerCapture?.(e.pointerId); construirEn(e.clientX, e.clientY);
+});
 lienzo.addEventListener('pointermove', e => { if (dedoAbajo) construirEn(e.clientX, e.clientY); });
 const soltarDedo = () => { if (dedoAbajo) { dedoAbajo = false; guardarObra(); } };
 ['pointerup', 'pointercancel'].forEach(t => lienzo.addEventListener(t, soltarDedo));
@@ -911,7 +1030,7 @@ $('bIrRescatar').onclick = () => { $('bIrRescatar').classList.remove('pulsa'); e
 $('misionOir').onclick = () => { const m = MISIONES[E.mision]; m ? di(m.es, m.en) : di(FIN_OBRA.es, FIN_OBRA.en); };
 
 function entrarObra() {
-  mostrar('obra'); pintarMision(); medirObra();
+  mostrar('obra'); pintarMision(); medirObra(); prepararPaseantes();
   camX = vista ? MARGEN - 1 : Math.max(0, mono.x - W2 / TS / 2);
   requestAnimationFrame(t => { tAnterior = t; bucleObra(t); });
   if (misionDicha !== E.mision) decirMision();
