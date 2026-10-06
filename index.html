@@ -1,0 +1,625 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="theme-color" content="#8fd3ff">
+<title>El Arca</title>
+<style>
+  :root { --cielo1: #8fd3ff; --cielo2: #e0f6ff; --pasto: #7bd389; --fg: #1f2937; }
+  * { box-sizing: border-box; margin: 0; }
+  html, body { height: 100%; overflow: hidden; font-family: system-ui, sans-serif; color: var(--fg); background: var(--cielo2); }
+  body { -webkit-user-select: none; user-select: none; -webkit-touch-callout: none; -webkit-tap-highlight-color: transparent; touch-action: manipulation; }
+  button { font: inherit; color: inherit; cursor: pointer; border: none; }
+
+  #barra { position: fixed; top: 0; left: 0; right: 0; z-index: 20; display: flex; gap: 8px; align-items: center; padding: 10px 12px; padding-top: max(10px, env(safe-area-inset-top)); pointer-events: none; }
+  #barra > * { pointer-events: auto; }
+  .chip { background: #ffffffd9; border-radius: 999px; padding: 6px 12px; font-weight: 700; font-size: 16px; box-shadow: 0 2px 0 #0001; }
+  .espacio { flex: 1; }
+  #candado.cargando { animation: llenar 3s linear forwards; }
+  @keyframes llenar { from { box-shadow: inset 0 0 0 0 #0003; } to { box-shadow: inset 0 0 0 24px #0003; } }
+
+  .pantalla { position: fixed; inset: 0; display: none; flex-direction: column; align-items: center; padding: 64px 16px 16px; overflow-y: auto; }
+  .pantalla.activa { display: flex; }
+  h1 { font-size: clamp(26px, 6vmin, 44px); text-shadow: 0 2px 0 #fff; text-align: center; }
+  h2 { font-size: clamp(22px, 5vmin, 34px); text-align: center; margin-bottom: 8px; }
+
+  /* Inicio: el arca */
+  #inicio { background: linear-gradient(var(--cielo1), var(--cielo2) 62%, #5dade2 62%, #2e86c1); justify-content: center; gap: 12px; }
+  #arca { width: min(92vw, 560px); background: none; }
+  #arca svg { width: 100%; height: auto; display: block; }
+  #arca.sacude { animation: sacude .4s; }
+  .tabla.nueva { animation: caer .45s ease-out; transform-box: fill-box; }
+  @keyframes caer { from { transform: translateY(-40px); opacity: 0; } }
+  #msgArca { font-weight: 700; font-size: clamp(16px, 3.6vmin, 22px); text-align: center; background: #ffffffd9; padding: 8px 14px; border-radius: 14px; }
+  .fila-botones { display: flex; gap: 12px; flex-wrap: wrap; justify-content: center; align-items: center; }
+  .grande { background: #22c55e; color: #fff; font-size: clamp(22px, 5vmin, 34px); font-weight: 800; padding: 16px 36px; border-radius: 24px; box-shadow: 0 6px 0 #15803d; }
+  .medio { background: #fff; font-size: clamp(16px, 3.6vmin, 22px); font-weight: 700; padding: 10px 16px; border-radius: 20px; box-shadow: 0 5px 0 #0002; display: flex; align-items: center; gap: 8px; }
+  .grande:active, .medio:active, .opcion:active { transform: translateY(3px); }
+  .pulsa { animation: pulsa 1s infinite; }
+  @keyframes pulsa { 50% { transform: scale(1.08); } }
+
+  /* Mundo para explorar */
+  #mundo { padding: 0; background: linear-gradient(var(--cielo1) 0 22%, var(--pasto) 22% 100%); overflow: hidden; }
+  #campo { position: absolute; inset: 0; }
+  .arbusto { position: absolute; transform: translate(-50%, -50%); font-size: clamp(56px, 13vmin, 110px); background: none; line-height: 1; filter: drop-shadow(0 6px 0 #0002); }
+  .arbusto.sacude { animation: sacudeA .4s; }
+  @keyframes sacudeA { 25% { transform: translate(-50%, -50%) rotate(-8deg); } 75% { transform: translate(-50%, -50%) rotate(8deg); } }
+  @keyframes sacude { 25% { transform: rotate(-3deg); } 75% { transform: rotate(3deg); } }
+  .asoma { position: absolute; transform: translate(-50%, -115%); font-size: clamp(40px, 9vmin, 72px); animation: asoma .4s ease-out; pointer-events: none; }
+  @keyframes asoma { from { transform: translate(-50%, -30%) scale(.3); opacity: 0; } }
+  #explorador { position: absolute; transform: translate(-50%, -60%); transition: left .6s ease-in-out, top .6s ease-in-out; pointer-events: none; z-index: 5; }
+  #bArca { position: absolute; left: 12px; bottom: max(12px, env(safe-area-inset-bottom)); z-index: 6; }
+
+  /* Personaje */
+  .avatar { position: relative; display: inline-grid; place-items: center; border-radius: 50%; background: var(--col); box-shadow: 0 4px 0 #0002; flex: none; }
+  .avatar .cara { line-height: 1; }
+  .avatar .gorro { position: absolute; left: 50%; top: 0; transform: translate(-50%, -45%); line-height: 1; }
+  #personaje, #album { background: linear-gradient(var(--cielo1), var(--cielo2)); gap: 10px; }
+  .grupo { display: flex; flex-wrap: wrap; gap: 10px; justify-content: center; max-width: 640px; }
+  .item { width: 72px; height: 72px; border-radius: 18px; background: #fff; font-size: 40px; display: grid; place-items: center; box-shadow: 0 4px 0 #0002; position: relative; }
+  .item.sel { outline: 4px solid #22c55e; }
+  .item.bloq { opacity: .45; }
+  .item .precio { position: absolute; bottom: 2px; left: 0; right: 0; font-size: 12px; font-weight: 800; }
+  h3 { font-size: 18px; margin-top: 8px; }
+
+  /* Álbum */
+  .rejilla { display: grid; grid-template-columns: repeat(auto-fill, minmax(96px, 1fr)); gap: 10px; width: min(100%, 720px); }
+  .ficha { background: #fff; border-radius: 18px; padding: 8px; text-align: center; box-shadow: 0 4px 0 #0002; }
+  .ficha .emo { font-size: 48px; line-height: 1.1; }
+  .ficha.no .emo { filter: brightness(0); opacity: .2; }
+  .ficha small { display: block; font-weight: 700; font-size: 13px; }
+
+  /* Capas: retos, festejo, final, ajustes */
+  .capa { position: fixed; inset: 0; z-index: 30; display: none; place-items: center; background: #0007; padding: 16px; }
+  .capa.abierta { display: grid; }
+  .tarjeta { background: #fff; border-radius: 28px; padding: 20px; width: min(94vw, 660px); max-height: 94vh; overflow-y: auto; display: flex; flex-direction: column; align-items: center; gap: 12px; position: relative; box-shadow: 0 10px 0 #0003; }
+  .animal-grande { font-size: clamp(80px, 22vmin, 150px); line-height: 1; }
+  .palabra { font-size: clamp(34px, 9vmin, 60px); font-weight: 800; letter-spacing: .04em; }
+  .palabra b { color: #ef4444; text-decoration: underline; }
+  #retoPregunta { font-size: clamp(18px, 4.5vmin, 26px); font-weight: 700; text-align: center; }
+  #retoOpciones { display: flex; gap: 12px; flex-wrap: wrap; justify-content: center; }
+  .opcion { min-width: clamp(80px, 20vmin, 120px); min-height: clamp(80px, 20vmin, 120px); border-radius: 24px; background: #e0f2fe; font-size: clamp(40px, 11vmin, 72px); font-weight: 800; box-shadow: 0 6px 0 #0284c733; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 2px; padding: 8px; }
+  .opcion .puntos { font-size: clamp(12px, 3vmin, 18px); letter-spacing: 2px; color: #0284c7; }
+  .opcion.mal { opacity: .35; animation: no .3s; }
+  @keyframes no { 25% { transform: translateX(-6px); } 75% { transform: translateX(6px); } }
+  .opcion.pista { animation: pulsa .8s infinite; background: #fef08a; }
+  .opcion.bien { background: #86efac; }
+  .contables { display: flex; flex-wrap: wrap; gap: 6px; justify-content: center; }
+  .contable { font-size: clamp(44px, 11vmin, 76px); background: none; position: relative; line-height: 1; }
+  .contable .num { position: absolute; right: -4px; top: -4px; background: #ef4444; color: #fff; font-size: 16px; font-weight: 800; border-radius: 999px; min-width: 26px; height: 26px; display: grid; place-items: center; }
+  .oir { position: absolute; right: 12px; top: 12px; background: #f1f5f9; }
+  .pareja { font-size: clamp(70px, 18vmin, 120px); animation: salta .5s infinite alternate; }
+  @keyframes salta { to { transform: translateY(-12px); } }
+  .texto-grande { font-size: clamp(20px, 5vmin, 30px); font-weight: 800; text-align: center; }
+
+  #final { background: linear-gradient(#4b5563, #9ca3af); overflow: hidden; transition: background 2s; }
+  #final.sol { background: linear-gradient(#8fd3ff, #e0f6ff); }
+  #final .contenido { display: flex; flex-direction: column; align-items: center; gap: 10px; z-index: 1; width: min(94vw, 600px); }
+  #arcoiris { width: min(80vw, 480px); aspect-ratio: 2; opacity: 0; transition: opacity 2.5s; margin-bottom: -18%;
+    background: radial-gradient(50% 100% at 50% 100%, transparent 50%, #8b5cf6 50% 58%, #3b82f6 58% 66%, #22c55e 66% 74%, #facc15 74% 82%, #f97316 82% 90%, #ef4444 90% 98%, transparent 98%); }
+  #final.sol #arcoiris { opacity: 1; }
+  #final .arca-final { width: min(80vw, 480px); }
+  #historia { background: #ffffffe6; border-radius: 18px; padding: 12px 16px; font-size: clamp(16px, 3.8vmin, 21px); font-weight: 600; line-height: 1.4; text-align: center; opacity: 0; transition: opacity 1s; }
+  #final.sol #historia { opacity: 1; }
+  .gota { position: absolute; top: -20px; width: 2px; height: 18px; background: #bfdbfe; animation: cae linear infinite; }
+  #final.sol .gota { display: none; }
+  @keyframes cae { to { transform: translateY(110vh); } }
+
+  #panel .tarjeta { align-items: stretch; }
+  #panel label { font-weight: 600; }
+  #panel input[type=text] { font: inherit; padding: 10px 12px; border: 1px solid #0002; border-radius: 12px; width: 100%; }
+  .opc { display: flex; align-items: center; gap: 10px; padding: 4px 0; }
+  .opc input { width: 22px; height: 22px; }
+  .boton { background: #f1f5f9; border-radius: 999px; padding: 10px 16px; font-weight: 700; }
+  .boton.principal { background: #1f2937; color: #fff; }
+  .boton.peligro { background: #fee2e2; color: #b91c1c; }
+  #toast { position: fixed; left: 50%; bottom: 24px; transform: translateX(-50%); background: #111d; color: #fff; padding: 10px 16px; border-radius: 14px; font-weight: 700; z-index: 40; opacity: 0; transition: opacity .3s; pointer-events: none; text-align: center; max-width: 90vw; }
+  #toast.ver { opacity: 1; }
+</style>
+</head>
+<body>
+<header id="barra">
+  <button id="bInicio" class="chip" title="Inicio">🚢</button>
+  <span class="chip" id="cEstrellas">⭐ 0</span>
+  <span class="chip" id="cTablas">🪵 0/10</span>
+  <span class="espacio"></span>
+  <button id="candado" class="chip" title="Mantén presionado 3 segundos">🔒</button>
+</header>
+
+<section id="inicio" class="pantalla activa">
+  <h1 id="titulo">El Arca</h1>
+  <button id="arca" aria-label="Arca"></button>
+  <p id="msgArca"></p>
+  <div class="fila-botones">
+    <button id="bJugar" class="grande">▶️ <span></span></button>
+  </div>
+  <div class="fila-botones">
+    <button id="bPersonaje" class="medio"><span class="mini"></span><span class="lbl"></span></button>
+    <button id="bAlbum" class="medio">🏆 <span class="lbl"></span></button>
+  </div>
+</section>
+
+<section id="mundo" class="pantalla">
+  <div id="campo"></div>
+  <div id="explorador"></div>
+  <button id="bArca" class="medio">🚢 <span class="lbl"></span></button>
+</section>
+
+<section id="personaje" class="pantalla">
+  <h2 class="lbl-personaje"></h2>
+  <div id="vistaAvatar"></div>
+  <h3 class="lbl-cara"></h3><div class="grupo" id="gCaras"></div>
+  <h3 class="lbl-gorro"></h3><div class="grupo" id="gGorros"></div>
+  <h3 class="lbl-color"></h3><div class="grupo" id="gColores"></div>
+</section>
+
+<section id="album" class="pantalla">
+  <h2 id="tituloAlbum"></h2>
+  <div class="rejilla" id="rejilla"></div>
+</section>
+
+<div id="reto" class="capa"><div class="tarjeta">
+  <button class="chip oir" id="retoOir">🔊</button>
+  <div id="retoVer"></div>
+  <div id="retoPregunta"></div>
+  <div id="retoOpciones"></div>
+</div></div>
+
+<div id="festejo" class="capa"><div class="tarjeta">
+  <div class="pareja" id="festejoPareja"></div>
+  <div class="texto-grande" id="festejoTexto"></div>
+  <div class="texto-grande" id="festejoEstrellas"></div>
+  <button class="grande" id="festejoSeguir">👍</button>
+</div></div>
+
+<div id="final" class="capa"><div class="contenido">
+  <div id="arcoiris"></div>
+  <div class="arca-final" id="arcaFinal"></div>
+  <p id="historia"></p>
+  <button class="grande" id="bNuevaArca"></button>
+</div></div>
+
+<div id="panel" class="capa"><div class="tarjeta">
+  <h2>⚙️ Ajustes para adultos</h2>
+  <label for="nombre">Nombre del niño o niña (opcional, solo se guarda en este aparato)</label>
+  <input type="text" id="nombre" maxlength="20" autocomplete="off">
+  <h3>Idioma / Language</h3>
+  <div id="pIdioma"></div>
+  <h3>Nivel</h3>
+  <div id="pNivel"></div>
+  <p style="color:#64748b;font-size:14px">El nivel sube solo al terminar cada arca. Fácil: letras con 2 opciones y contar hasta 3. Medio: 3 opciones, hasta 5. Difícil: 4 opciones, hasta 8, sin resaltar la letra.</p>
+  <button class="boton peligro" id="bReiniciar">Borrar el progreso</button>
+  <button class="boton principal" id="bCerrarPanel">Listo 🔒</button>
+</div></div>
+
+<div id="toast"></div>
+
+<script>
+// ---------- Datos ----------
+const ANIMALES = [
+  { id: 'leon',     emo: '🦁', g: 'm', es: ['León', 'leones'],         en: ['Lion', 'lions'] },
+  { id: 'elefante', emo: '🐘', g: 'm', es: ['Elefante', 'elefantes'],  en: ['Elephant', 'elephants'] },
+  { id: 'jirafa',   emo: '🦒', g: 'f', es: ['Jirafa', 'jirafas'],      en: ['Giraffe', 'giraffes'] },
+  { id: 'mono',     emo: '🐒', g: 'm', es: ['Mono', 'monos'],          en: ['Monkey', 'monkeys'] },
+  { id: 'tigre',    emo: '🐯', g: 'm', es: ['Tigre', 'tigres'],        en: ['Tiger', 'tigers'] },
+  { id: 'oso',      emo: '🐻', g: 'm', es: ['Oso', 'osos'],            en: ['Bear', 'bears'] },
+  { id: 'perro',    emo: '🐶', g: 'm', es: ['Perro', 'perros'],        en: ['Dog', 'dogs'] },
+  { id: 'gato',     emo: '🐱', g: 'm', es: ['Gato', 'gatos'],          en: ['Cat', 'cats'] },
+  { id: 'vaca',     emo: '🐮', g: 'f', es: ['Vaca', 'vacas'],          en: ['Cow', 'cows'] },
+  { id: 'cerdo',    emo: '🐷', g: 'm', es: ['Cerdo', 'cerdos'],        en: ['Pig', 'pigs'] },
+  { id: 'pato',     emo: '🦆', g: 'm', es: ['Pato', 'patos'],          en: ['Duck', 'ducks'] },
+  { id: 'conejo',   emo: '🐰', g: 'm', es: ['Conejo', 'conejos'],      en: ['Rabbit', 'rabbits'] },
+  { id: 'caballo',  emo: '🐴', g: 'm', es: ['Caballo', 'caballos'],    en: ['Horse', 'horses'] },
+  { id: 'oveja',    emo: '🐑', g: 'f', es: ['Oveja', 'ovejas'],        en: ['Sheep', 'sheep'] },
+  { id: 'rana',     emo: '🐸', g: 'f', es: ['Rana', 'ranas'],          en: ['Frog', 'frogs'] },
+  { id: 'tortuga',  emo: '🐢', g: 'f', es: ['Tortuga', 'tortugas'],    en: ['Turtle', 'turtles'] },
+  { id: 'pinguino', emo: '🐧', g: 'm', es: ['Pingüino', 'pingüinos'],  en: ['Penguin', 'penguins'] },
+  { id: 'zorro',    emo: '🦊', g: 'm', es: ['Zorro', 'zorros'],        en: ['Fox', 'foxes'] },
+  { id: 'cebra',    emo: '🦓', g: 'f', es: ['Cebra', 'cebras'],        en: ['Zebra', 'zebras'] },
+  { id: 'buho',     emo: '🦉', g: 'm', es: ['Búho', 'búhos'],          en: ['Owl', 'owls'] },
+  { id: 'koala',    emo: '🐨', g: 'm', es: ['Koala', 'koalas'],        en: ['Koala', 'koalas'] },
+  { id: 'raton',    emo: '🐭', g: 'm', es: ['Ratón', 'ratones'],       en: ['Mouse', 'mice'] },
+  { id: 'gallina',  emo: '🐔', g: 'f', es: ['Gallina', 'gallinas'],    en: ['Hen', 'hens'] },
+];
+// [emoji, estrellas necesarias]: los premios se desbloquean, no se gastan
+const CARAS   = [['👦', 0], ['👦🏻', 0], ['👦🏽', 0], ['👦🏿', 0], ['🧒', 0], ['🤖', 10], ['🦸', 20], ['🐵', 30]];
+const GORROS  = [['', 0], ['🧢', 0], ['🎩', 5], ['🤠', 10], ['🎓', 15], ['⛑️', 20], ['👑', 30]];
+const COLORES = ['#4dabf7', '#ff6b6b', '#51cf66', '#fcc419', '#cc5de8', '#ff922b'];
+const TABLAS_ARCA = 10;
+const LETRAS = 'ABCDEFGHIJLMNOPRSTUVZ';   // sin K, Ñ, Q, W, X, Y para no confundir al empezar
+
+// ---------- Estado guardado (si el navegador lo permite) ----------
+const DEF = { estrellas: 0, coleccion: {}, tablas: 0, pendientes: 0, nivel: 1, arcas: 0,
+              avatar: { cara: '👦', gorro: '🧢', color: '#4dabf7' }, nombre: '', idioma: 'ambos', bienvenida: false };
+let E;
+try { E = JSON.parse(localStorage.getItem('arca.estado')) || {}; } catch { E = {}; }
+E = { ...JSON.parse(JSON.stringify(DEF)), ...E, avatar: { ...DEF.avatar, ...(E.avatar || {}) } };
+function guardar() { try { localStorage.setItem('arca.estado', JSON.stringify(E)); } catch {} }
+
+// ---------- Textos y voz ----------
+const T = (es, en) => E.idioma === 'es' ? es : E.idioma === 'en' ? en : `${es} · ${en}`;
+const lenguasMsg = () => E.idioma === 'ambos' ? ['es', 'en'] : [E.idioma];
+function vozDe(l) {
+  const vs = speechSynthesis.getVoices(), pref = l === 'es' ? ['es-mx', 'es-us', 'es'] : ['en-us', 'en-gb', 'en'];
+  for (const x of pref) { const v = vs.find(v => v.lang.replace('_', '-').toLowerCase().startsWith(x)); if (v) return v; }
+}
+function decir(partes) {   // partes: [{ l: 'es' | 'en', t: 'texto' }]
+  if (!('speechSynthesis' in window)) return;
+  speechSynthesis.cancel();
+  for (const { l, t } of partes) {
+    const u = new SpeechSynthesisUtterance(t);
+    u.lang = l === 'es' ? 'es-MX' : 'en-US'; u.rate = 0.9; u.pitch = 1.1;
+    const v = vozDe(l); if (v) u.voice = v;
+    speechSynthesis.speak(u);
+  }
+}
+const di = (es, en) => decir(lenguasMsg().map(l => ({ l, t: l === 'es' ? es : en })));
+if ('speechSynthesis' in window) speechSynthesis.getVoices();
+const sinAcento = s => s.normalize('NFD').replace(/[̀-ͯ]/g, '');
+const nombreNino = () => E.nombre.trim();
+
+// ---------- Sonidos ----------
+let ac;
+function audio() { ac ??= new (window.AudioContext || window.webkitAudioContext)(); ac.resume(); return ac; }
+function tono(f, t0, dur, tipo = 'sine', vol = 0.18) {
+  const a = audio(), o = a.createOscillator(), g = a.createGain(), t = a.currentTime + t0;
+  o.type = tipo; o.frequency.value = f;
+  g.gain.setValueAtTime(0, t); g.gain.linearRampToValueAtTime(vol, t + 0.01); g.gain.exponentialRampToValueAtTime(0.0001, t + dur);
+  o.connect(g); g.connect(a.destination); o.start(t); o.stop(t + dur + 0.05);
+}
+const sfx = {
+  bien:     () => [523, 659, 784, 1047].forEach((f, i) => tono(f, i * 0.09, 0.3, 'triangle')),
+  casi:     () => { tono(392, 0, 0.2, 'sine', 0.12); tono(349, 0.16, 0.3, 'sine', 0.12); },
+  martillo: () => { tono(140, 0, 0.12, 'square', 0.12); tono(90, 0.02, 0.15, 'triangle', 0.2); },
+  pop:      () => tono(880, 0, 0.1, 'sine', 0.15),
+  paso:     () => { tono(300, 0, 0.06, 'triangle', 0.08); tono(260, 0.2, 0.06, 'triangle', 0.08); },
+  fanfarria:() => [523, 659, 784, 659, 784, 1047].forEach((f, i) => tono(f, i * 0.15, 0.4, 'triangle', 0.16)),
+};
+
+// ---------- Utilidades ----------
+const $ = id => document.getElementById(id);
+const azar = n => Math.floor(Math.random() * n);
+const mezclar = a => { for (let i = a.length - 1; i > 0; i--) { const j = azar(i + 1); [a[i], a[j]] = [a[j], a[i]]; } return a; };
+let tToast;
+function toast(txt) { const el = $('toast'); el.textContent = txt; el.classList.add('ver'); clearTimeout(tToast); tToast = setTimeout(() => el.classList.remove('ver'), 2600); }
+function avatarHTML(av, tam) {
+  return `<span class="avatar" style="--col:${av.color};width:${tam}px;height:${tam}px">
+    <span class="cara" style="font-size:${tam * 0.7}px">${av.cara}</span>
+    ${av.gorro ? `<span class="gorro" style="font-size:${tam * 0.55}px">${av.gorro}</span>` : ''}</span>`;
+}
+function mostrar(id) { document.querySelectorAll('.pantalla').forEach(p => p.classList.toggle('activa', p.id === id)); }
+function barra() {
+  $('cEstrellas').textContent = `⭐ ${E.estrellas}`;
+  $('cTablas').textContent = `🪵 ${E.tablas}/${TABLAS_ARCA}` + (E.pendientes ? ` +${E.pendientes}` : '');
+}
+
+// ---------- El arca (dibujo) ----------
+function svgArca(tablas, completa, nueva) {
+  let s = '<svg viewBox="0 0 300 200" xmlns="http://www.w3.org/2000/svg">';
+  for (let i = 0; i < TABLAS_ARCA; i++) {
+    const y = 150 - i * 7, x1 = 60 - i * 3.5, x2 = 240 + i * 3.5, hecha = i < tablas;
+    s += `<rect class="tabla${hecha && nueva && i === tablas - 1 ? ' nueva' : ''}" x="${x1}" y="${y}" width="${x2 - x1}" height="6" rx="3"
+      fill="${hecha ? (i % 2 ? '#a0522d' : '#8b4513') : 'none'}" stroke="${hecha ? '#5c2e0e' : '#ffffffcc'}" stroke-width="1.2" ${hecha ? '' : 'stroke-dasharray="4 3"'}/>`;
+  }
+  const rescatados = ANIMALES.filter(a => E.coleccion[a.id]).map(a => a.emo);
+  if (completa) {
+    s += '<polygon points="92,58 150,28 208,58" fill="#b45309" stroke="#5c2e0e"/><rect x="100" y="56" width="100" height="31" fill="#deb887" stroke="#5c2e0e"/>';
+    rescatados.slice(0, 4).forEach((e, k) => { s += `<rect x="${106 + k * 23}" y="62" width="19" height="19" rx="4" fill="#fff8"/><text x="${115.5 + k * 23}" y="77" font-size="14" text-anchor="middle">${e}</text>`; });
+  } else if (tablas) {
+    const yTop = 150 - (tablas - 1) * 7;
+    rescatados.slice(-6).forEach((e, k, arr) => { s += `<text x="${150 + (k - (arr.length - 1) / 2) * 20}" y="${yTop - 2}" font-size="16" text-anchor="middle">${e}</text>`; });
+  }
+  s += '<path d="M0 162 Q 25 154 50 162 T 100 162 T 150 162 T 200 162 T 250 162 T 300 162 V200 H0 Z" fill="#3b82f6" opacity=".85"/></svg>';
+  return s;
+}
+function pintarInicio(nueva = false) {
+  $('titulo').textContent = nombreNino() ? T(`El Arca de ${nombreNino()}`, `${nombreNino()}'s Ark`) : T('El Arca', 'The Ark');
+  $('arca').innerHTML = svgArca(E.tablas, E.tablas >= TABLAS_ARCA, nueva);
+  $('msgArca').textContent = E.pendientes
+    ? T(`🔨 Tienes ${E.pendientes} ${E.pendientes === 1 ? 'tabla' : 'tablas'}: ¡toca el arca para construir!`, `🔨 You have ${E.pendientes} ${E.pendientes === 1 ? 'plank' : 'planks'}: tap the ark to build!`)
+    : T('Rescata animales para ganar tablas 🪵', 'Rescue animals to earn planks 🪵');
+  $('arca').classList.toggle('pulsa', E.pendientes > 0);
+  $('bJugar').querySelector('span').textContent = T('Jugar', 'Play');
+  $('bJugar').classList.toggle('pulsa', !E.pendientes);
+  $('bPersonaje').querySelector('.mini').innerHTML = avatarHTML(E.avatar, 34);
+  $('bPersonaje').querySelector('.lbl').textContent = T('Mi personaje', 'My character');
+  $('bAlbum').querySelector('.lbl').textContent = T('Mis animales', 'My animals');
+  barra();
+}
+$('arca').onclick = () => {
+  if (!E.pendientes) {
+    $('arca').classList.remove('sacude'); void $('arca').offsetWidth; $('arca').classList.add('sacude');
+    di('Rescata animales para ganar tablas.', 'Rescue animals to earn planks.');
+    return;
+  }
+  E.tablas++; E.pendientes--; guardar(); sfx.martillo(); pintarInicio(true);
+  if (E.tablas >= TABLAS_ARCA) setTimeout(finalArca, 900);
+  else if (!E.pendientes) di('¡Muy bien! Rescata más animales para seguir construyendo.', 'Great job! Rescue more animals to keep building.');
+};
+$('bJugar').onclick = () => entrarMundo();
+$('bInicio').onclick = () => { cerrarCapas(); pintarInicio(); mostrar('inicio'); };
+$('bPersonaje').onclick = () => { pintarPersonaje(); mostrar('personaje'); };
+$('bAlbum').onclick = () => { pintarAlbum(); mostrar('album'); };
+
+// ---------- Mundo para explorar ----------
+const campo = $('campo'), explorador = $('explorador');
+let arbustos = [], ocupado = false, pos = { x: 50, y: 86 };
+function pintarExplorador() {
+  explorador.innerHTML = avatarHTML(E.avatar, Math.max(56, Math.min(innerWidth, innerHeight) * 0.13));
+  explorador.style.left = pos.x + '%'; explorador.style.top = pos.y + '%';
+}
+function caminar(x, y) {
+  const av = explorador.querySelector('.avatar');
+  if (av) av.style.transform = x < pos.x ? 'scaleX(-1)' : '';
+  pos = { x, y }; explorador.style.left = x + '%'; explorador.style.top = y + '%';
+  sfx.paso();
+  return new Promise(res => setTimeout(res, 650));
+}
+function elegirAnimal() {
+  const enCampo = new Set(arbustos.map(b => b.animal.id));
+  const libres = ANIMALES.filter(a => !enCampo.has(a.id));
+  const min = Math.min(...libres.map(a => E.coleccion[a.id] || 0));
+  const menos = libres.filter(a => (E.coleccion[a.id] || 0) === min);   // primero los que aún no tiene
+  return menos[azar(menos.length)];
+}
+function nuevoArbusto() {
+  let x, y, intentos = 0;
+  do { x = 12 + Math.random() * 76; y = 32 + Math.random() * 40; intentos++; }
+  while (intentos < 30 && arbustos.some(b => Math.hypot(b.x - x, (b.y - y) * 1.4) < 20));
+  const el = document.createElement('button'), animal = elegirAnimal();
+  el.className = 'arbusto'; el.textContent = ['🌳', '🌲', '🌴', '🌳', '🌿'][azar(5)];
+  el.style.left = x + '%'; el.style.top = y + '%';
+  const b = { x, y, el, animal };
+  el.onclick = async e => {
+    e.stopPropagation();
+    if (ocupado) return;
+    ocupado = true;
+    await caminar(x, Math.min(y + 9, 90));
+    el.classList.add('sacude');
+    const asoma = document.createElement('span');
+    asoma.className = 'asoma'; asoma.textContent = animal.emo; asoma.style.left = x + '%'; asoma.style.top = y + '%';
+    campo.appendChild(asoma); sfx.pop();
+    setTimeout(() => { asoma.remove(); abrirReto(b); }, 800);
+  };
+  campo.appendChild(el); arbustos.push(b);
+}
+campo.onclick = e => {
+  if (ocupado) return;
+  const r = campo.getBoundingClientRect();
+  caminar(Math.max(5, Math.min(95, (e.clientX - r.left) / r.width * 100)), Math.max(28, Math.min(92, (e.clientY - r.top) / r.height * 100)));
+};
+function entrarMundo() {
+  mostrar('mundo'); pintarExplorador(); ocupado = false;
+  while (arbustos.length < 5) nuevoArbusto();
+  $('bArca').querySelector('.lbl').textContent = T('Arca', 'Ark') + (E.pendientes ? ` 🪵+${E.pendientes}` : '');
+  $('bArca').classList.toggle('pulsa', E.pendientes >= 3);
+  if (!E.bienvenida) {
+    E.bienvenida = true; guardar();
+    di('Ayuda a Noé a rescatar a los animales. ¡Toca los árboles para buscarlos!', 'Help Noah rescue the animals. Tap the trees to find them!');
+  }
+}
+$('bArca').onclick = e => { e.stopPropagation(); pintarInicio(); mostrar('inicio'); };
+
+// ---------- Retos ----------
+let reto = null, turnoLengua = 0;
+const lenguaReto = () => E.idioma === 'ambos' ? (turnoLengua++ % 2 ? 'en' : 'es') : E.idioma;
+const numOpciones = () => E.nivel + 1;                 // 2, 3 o 4
+const maxContar = () => [3, 5, 8][E.nivel - 1];
+function abrirReto(arbusto) {
+  const a = arbusto.animal, l = lenguaReto(), tipo = Math.random() < 0.5 ? 'letra' : 'contar';
+  reto = { arbusto, a, l, tipo, intentos: 0 };
+  const ver = $('retoVer'), opc = $('retoOpciones');
+  opc.innerHTML = '';
+  if (tipo === 'letra') {
+    const palabra = a[l][0], letra = sinAcento(palabra)[0].toUpperCase();
+    reto.respuesta = letra;
+    const resaltar = E.nivel < 3;
+    ver.innerHTML = `<div class="animal-grande">${a.emo}</div><div class="palabra">${resaltar ? `<b>${palabra[0]}</b>${palabra.slice(1)}` : palabra}</div>`;
+    const otras = mezclar([...LETRAS].filter(c => c !== letra)).slice(0, numOpciones() - 1);
+    mezclar([letra, ...otras]).forEach(c => opc.appendChild(botonOpcion(c, c === letra)));
+    const un = a.g === 'f' ? 'una' : 'un';
+    reto.pregunta = l === 'es' ? `¡Mira, ${un} ${palabra.toLowerCase()}! ${palabra} empieza con la letra ${letra}. Toca la ${letra}.`
+                               : `Look, a ${palabra.toLowerCase()}! ${palabra} starts with the letter ${letra}. Tap the ${letra}.`;
+    $('retoPregunta').textContent = l === 'es' ? `Toca la letra ${letra}` : `Tap the letter ${letra}`;
+  } else {
+    const n = 1 + azar(maxContar());
+    reto.respuesta = n;
+    ver.innerHTML = '<div class="contables"></div>';
+    let contados = 0;
+    for (let k = 0; k < n; k++) {
+      const c = document.createElement('button');
+      c.className = 'contable'; c.textContent = a.emo;
+      c.onclick = () => {   // tocar cada animal lo cuenta en voz alta
+        if (c.querySelector('.num')) return;
+        contados++; c.insertAdjacentHTML('beforeend', `<span class="num">${contados}</span>`);
+        sfx.pop(); decir([{ l, t: String(contados) }]);
+      };
+      ver.firstChild.appendChild(c);
+    }
+    const cerca = [];
+    for (let d = 1; cerca.length < 6; d++) { if (n - d >= 1) cerca.push(n - d); if (n + d <= Math.max(maxContar(), 3)) cerca.push(n + d); if (d > 8) break; }
+    const otras = mezclar(cerca).slice(0, numOpciones() - 1);
+    mezclar([n, ...otras]).forEach(v => opc.appendChild(botonOpcion(v, v === n, v <= 5 ? '●'.repeat(v) : '')));
+    const plural = n === 1 ? a[l][0].toLowerCase() : a[l][1];
+    const cuantos = a.g === 'f' ? 'Cuántas' : 'Cuántos';
+    reto.pregunta = l === 'es' ? `¿${cuantos} ${a[l][1]} hay? Tócal${a.g === 'f' ? 'a' : 'o'}s para contarl${a.g === 'f' ? 'a' : 'o'}s.` : `How many ${a[l][1]}? Tap them to count.`;
+    reto.plural = plural;
+    $('retoPregunta').textContent = l === 'es' ? `¿${cuantos} hay?` : `How many?`;
+  }
+  $('reto').classList.add('abierta');
+  decir([{ l, t: reto.pregunta }]);
+}
+function botonOpcion(valor, correcta, puntos = '') {
+  const b = document.createElement('button');
+  b.className = 'opcion'; b.innerHTML = `<span>${valor}</span>${puntos ? `<span class="puntos">${puntos}</span>` : ''}`;
+  b.dataset.ok = correcta ? '1' : '';
+  b.onclick = () => responder(b, correcta);
+  return b;
+}
+$('retoOir').onclick = () => reto && decir([{ l: reto.l, t: reto.pregunta }]);
+function responder(b, correcta) {
+  if (!reto || b.disabled) return;
+  const { l, a } = reto;
+  if (!correcta) {
+    reto.intentos++; b.disabled = true; b.classList.add('mal'); sfx.casi();
+    decir([{ l, t: l === 'es' ? '¡Casi! Intenta otra vez.' : 'Almost! Try again.' }]);
+    if (reto.intentos >= 2) $('retoOpciones').querySelector('[data-ok="1"]').classList.add('pista');
+    return;
+  }
+  b.classList.add('bien'); sfx.bien();
+  $('retoOpciones').querySelectorAll('button').forEach(x => x.disabled = true);
+  if (reto.tipo === 'letra') {
+    decir([{ l, t: l === 'es' ? `¡Muy bien! ${a.es[0]} empieza con ${reto.respuesta}.` : `Great job! ${a.en[0]} starts with ${reto.respuesta}.` }]);
+  } else {
+    const n = reto.respuesta, seq = Array.from({ length: n }, (_, k) => k + 1).join(', ');
+    decir([{ l, t: l === 'es' ? `${seq}. ¡${n} ${reto.plural}! ¡Muy bien!` : `${seq}. ${n} ${reto.plural}! Great job!` }]);
+  }
+  const primera = reto.intentos === 0, arbusto = reto.arbusto;
+  reto = null;
+  setTimeout(() => { $('reto').classList.remove('abierta'); rescatar(arbusto, primera); }, 2200);
+}
+
+// ---------- Rescate y premios ----------
+const desbloqueados = () => [...CARAS, ...GORROS].filter(([, p]) => p && p <= E.estrellas).map(([e]) => e);
+function rescatar(arbusto, primera) {
+  const a = arbusto.animal, antes = desbloqueados();
+  E.coleccion[a.id] = (E.coleccion[a.id] || 0) + 1;
+  const ganadas = primera ? 2 : 1;
+  E.estrellas += ganadas; E.pendientes++; guardar(); barra();
+  arbusto.el.remove(); arbustos = arbustos.filter(b => b !== arbusto);
+  const los = a.g === 'f' ? 'las' : 'los';
+  $('festejoPareja').textContent = a.emo + a.emo;
+  $('festejoTexto').textContent = T(`¡Rescataste a ${los} ${a.es[1]}!`, `You rescued the ${a.en[1]}!`);
+  $('festejoEstrellas').textContent = `+${ganadas} ⭐   +1 🪵`;
+  $('festejo').classList.add('abierta');
+  sfx.fanfarria();
+  setTimeout(() => di(`¡Rescataste a ${los} ${a.es[1]}!`, `You rescued the ${a.en[1]}!`), 300);
+  desbloqueados().filter(e => !antes.includes(e)).forEach((e, k) => setTimeout(() => toast(T(`🎁 ¡Nuevo premio: ${e}!`, `🎁 New prize: ${e}!`)), 1200 + k * 2800));
+}
+$('festejoSeguir').onclick = () => {
+  $('festejo').classList.remove('abierta');
+  entrarMundo();
+  if (E.pendientes + E.tablas >= TABLAS_ARCA) { toast(T('🚢 ¡Ya tienes todas las tablas! Ve a construir.', '🚢 You have all the planks! Go build.')); }
+  else if (E.pendientes >= 3) toast(T('🔨 ¡Ve al arca a construir!', '🔨 Go build your ark!'));
+};
+
+// ---------- Arca terminada: lluvia, arcoíris y la historia ----------
+function finalArca() {
+  const f = $('final');
+  f.classList.remove('sol'); f.classList.add('abierta');
+  f.querySelectorAll('.gota').forEach(g => g.remove());
+  for (let k = 0; k < 50; k++) {
+    const g = document.createElement('div');
+    g.className = 'gota'; g.style.left = Math.random() * 100 + '%';
+    g.style.animationDuration = (0.6 + Math.random() * 0.6) + 's'; g.style.animationDelay = -Math.random() + 's';
+    f.appendChild(g);
+  }
+  $('arcaFinal').innerHTML = svgArca(TABLAS_ARCA, true, false);
+  const n = nombreNino();
+  const es = `¡Terminaste el arca! Dios le pidió a Noé construir un arca para cuidar a los animales. Llovió mucho, pero todos estaban a salvo. Después, Dios puso un arcoíris en el cielo como promesa de amor. ¡Dios también te cuida a ti${n ? ', ' + n : ''}!`;
+  const en = `You finished the ark! God asked Noah to build an ark to keep the animals safe. It rained a lot, but everyone was safe. Then God put a rainbow in the sky as a promise of love. God takes care of you too${n ? ', ' + n : ''}!`;
+  $('historia').textContent = E.idioma === 'en' ? en : es;
+  $('bNuevaArca').textContent = T('⭐ ¡Nueva arca!', '⭐ New ark!');
+  $('bNuevaArca').style.visibility = 'hidden';
+  setTimeout(() => { f.classList.add('sol'); sfx.fanfarria(); di(es, en); $('bNuevaArca').style.visibility = ''; }, 3000);
+}
+$('bNuevaArca').onclick = () => {
+  E.arcas++; E.estrellas += 5; E.tablas = 0; E.nivel = Math.min(3, E.nivel + 1); guardar();
+  $('final').classList.remove('abierta', 'sol');
+  toast(T('+5 ⭐ ¡Nivel nuevo!', '+5 ⭐ New level!'));
+  pintarInicio(); mostrar('inicio');
+};
+
+// ---------- Mi personaje ----------
+function pintarPersonaje() {
+  document.querySelector('.lbl-personaje').textContent = T('Mi personaje', 'My character');
+  document.querySelector('.lbl-cara').textContent = T('Cara', 'Face');
+  document.querySelector('.lbl-gorro').textContent = T('Gorro', 'Hat');
+  document.querySelector('.lbl-color').textContent = T('Color', 'Color');
+  $('vistaAvatar').innerHTML = avatarHTML(E.avatar, 120);
+  const grupo = (cont, lista, campo) => {
+    cont.innerHTML = '';
+    for (const [emo, precio] of lista) {
+      const b = document.createElement('button'), bloq = precio > E.estrellas;
+      b.className = 'item' + (E.avatar[campo] === emo ? ' sel' : '') + (bloq ? ' bloq' : '');
+      b.innerHTML = (emo || '🚫') + (bloq ? `<span class="precio">🔒 ⭐${precio}</span>` : '');
+      b.onclick = () => {
+        if (bloq) { sfx.casi(); di(`Necesitas ${precio} estrellas. ¡Rescata más animales!`, `You need ${precio} stars. Rescue more animals!`); return; }
+        E.avatar[campo] = emo; guardar(); sfx.pop(); pintarPersonaje();
+      };
+      cont.appendChild(b);
+    }
+  };
+  grupo($('gCaras'), CARAS, 'cara');
+  grupo($('gGorros'), GORROS, 'gorro');
+  $('gColores').innerHTML = '';
+  for (const c of COLORES) {
+    const b = document.createElement('button');
+    b.className = 'item' + (E.avatar.color === c ? ' sel' : ''); b.style.background = c;
+    b.onclick = () => { E.avatar.color = c; guardar(); sfx.pop(); pintarPersonaje(); };
+    $('gColores').appendChild(b);
+  }
+}
+
+// ---------- Mis animales ----------
+function pintarAlbum() {
+  const total = ANIMALES.filter(a => E.coleccion[a.id]).length;
+  $('tituloAlbum').textContent = T(`🏆 Rescatados: ${total} de ${ANIMALES.length}`, `🏆 Rescued: ${total} of ${ANIMALES.length}`);
+  const rej = $('rejilla'); rej.innerHTML = '';
+  for (const a of ANIMALES) {
+    const n = E.coleccion[a.id] || 0, f = document.createElement('button');
+    f.className = 'ficha' + (n ? '' : ' no');
+    f.innerHTML = `<div class="emo">${a.emo}</div><small>${n ? T(a.es[0], a.en[0]) + ` ×${n}` : '?'}</small>`;
+    f.onclick = () => { if (!n) return; sfx.pop(); di(a.es[0], a.en[0]); };
+    rej.appendChild(f);
+  }
+}
+
+// ---------- Ajustes para adultos (mantener 🔒 3 segundos) ----------
+const bCand = $('candado');
+let tCand = null;
+bCand.addEventListener('pointerdown', () => {
+  bCand.classList.add('cargando');
+  tCand = setTimeout(() => { tCand = null; bCand.classList.remove('cargando'); abrirPanel(); }, 3000);
+});
+const soltarCandado = () => { if (tCand) { clearTimeout(tCand); tCand = null; bCand.classList.remove('cargando'); } };
+['pointerup', 'pointerleave', 'pointercancel'].forEach(t => bCand.addEventListener(t, soltarCandado));
+addEventListener('contextmenu', e => e.preventDefault());
+
+function radios(cont, nombre, opciones, actual, alCambiar) {
+  cont.innerHTML = '';
+  for (const [v, txt] of opciones) {
+    const d = document.createElement('div');
+    d.className = 'opc';
+    d.innerHTML = `<input type="radio" name="${nombre}" id="${nombre}-${v}" ${String(actual) === String(v) ? 'checked' : ''}><label for="${nombre}-${v}">${txt}</label>`;
+    d.querySelector('input').onchange = () => alCambiar(v);
+    cont.appendChild(d);
+  }
+}
+function abrirPanel() {
+  $('nombre').value = E.nombre;
+  radios($('pIdioma'), 'idioma', [['es', 'Español'], ['en', 'English'], ['ambos', 'Bilingüe (español + English)']], E.idioma, v => { E.idioma = v; guardar(); });
+  radios($('pNivel'), 'nivel', [[1, 'Fácil'], [2, 'Medio'], [3, 'Difícil']], E.nivel, v => { E.nivel = Number(v); guardar(); });
+  $('panel').classList.add('abierta');
+}
+$('nombre').oninput = () => { E.nombre = $('nombre').value; guardar(); };
+$('bCerrarPanel').onclick = () => {
+  $('panel').classList.remove('abierta');
+  pintarInicio(); mostrar('inicio');
+};
+$('bReiniciar').onclick = () => {
+  if (!confirm('¿Borrar estrellas, animales, tablas y premios? Esto no se puede deshacer.')) return;
+  const { nombre, idioma } = E;
+  E = { ...JSON.parse(JSON.stringify(DEF)), nombre, idioma };
+  arbustos.forEach(b => b.el.remove()); arbustos = [];
+  guardar(); $('panel').classList.remove('abierta'); pintarInicio(); mostrar('inicio');
+};
+function cerrarCapas() { ['reto', 'festejo'].forEach(id => $(id).classList.remove('abierta')); reto = null; ocupado = false; }
+
+pintarInicio();
+</script>
+</body>
+</html>
