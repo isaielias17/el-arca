@@ -9,6 +9,12 @@ Como en los juegos grandes, pero sin violencia y sin compras: tu personaje en su
 - **💃 Bailes:** toca a tu personaje o los botones de baile; en el arca, el botón 💃 hace bailar al monito.
 - **🐾 Mascota:** te sigue por el prado y por la obra del arca. Tócala para acariciarla.
 
+## 🏗️ Mi isla (modo creativo)
+Una isla propia para construir lo que quieras, con piezas como en los juegos de construir: 🧱 muros (sólidos), ▬ pisos (se pisan desde arriba) y ◢ rampas (se suben caminando; toca la rampa otra vez para voltearla). 8 materiales (madera, piedra, ladrillo, vidrio, oro, pasto, nieve, morado), 🌳 cosas para decorar y los animales que ya rescataste. 🧽 borra, ↩️ deshace y se puede pintar arrastrando el dedo.
+- Tu monito camina, salta y sube por lo que construyes; 🔭 muestra toda la isla.
+- 7 retos de construcción con voz: 5 muros, una torre de 4, 2 rampas, subir hasta arriba de la torre, 3 árboles o animales, una casa (2 muros y un techo) y el piso del arca (8 pisos en fila). Después, modo libre.
+- La isla se guarda sola en el aparato.
+
 ## 🏃 Carrera de letras (obby)
 Una carrera de plataformas sobre el agua para rescatar a un animal juntando las letras de su nombre (en español o en inglés): "PATO", "OSO", "CABALLO"…
 - Saltos, escaleras, plataformas que se mueven ◀ ▶ y trampolines ⏫. Estrellas ⭐ para atrapar.

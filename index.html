@@ -203,6 +203,21 @@
   #finObby .tarjeta { background: linear-gradient(#e0f2fe, #fff); }
   #finObbyPalabra span { display: inline-block; animation: aparece .5s backwards; color: #16a34a; }
 
+  /* Mi isla (modo creativo) */
+  .modo.creativo { background: linear-gradient(135deg, #14b8a6, #eab308); }
+  #miIsla { padding: 0; background: #7cc8ff; overflow: hidden; }
+  #lienzoIsla { position: absolute; inset: 0; width: 100%; height: 100%; touch-action: none; }
+  #herrIsla { position: absolute; top: max(54px, calc(env(safe-area-inset-top) + 48px)); left: 8px; right: 8px; margin: 0 auto; width: fit-content; max-width: calc(100vw - 16px); display: flex; flex-direction: column; gap: 6px; align-items: center; z-index: 4; }
+  .filaHerr { display: flex; gap: 6px; overflow-x: auto; scrollbar-width: none; max-width: 100%; padding: 4px; background: #ffffffe8; border-radius: 18px; box-shadow: 0 4px 0 #0002; }
+  .filaHerr:empty { display: none; }
+  .filaHerr button { flex: none; width: clamp(44px, 11vmin, 58px); height: clamp(44px, 11vmin, 58px); border-radius: 14px; background: #f1f5f9; font-size: clamp(22px, 6vmin, 30px); font-weight: 900; display: grid; place-items: center; }
+  .filaHerr button.sel { outline: 4px solid #22c55e; background: #dcfce7; }
+  #materiales button { border-radius: 50%; border: 3px solid #0002; }
+  #retoIsla { display: flex; align-items: center; gap: 6px; background: #1e1b4bdd; color: #fff; border-radius: 999px; padding: 4px 6px 4px 14px; font-weight: 800; font-size: 15px; max-width: 100%; }
+  #retoIsla .chip { color: #1f2937; }
+  #mandosI { position: absolute; left: 0; right: 0; bottom: 0; padding: 10px 12px max(10px, env(safe-area-inset-bottom)); display: flex; justify-content: space-between; align-items: flex-end; z-index: 4; pointer-events: none; }
+  #mandosI .grupoMando button.saltoGrande { width: clamp(76px, 19vmin, 104px); height: clamp(76px, 19vmin, 104px); font-size: clamp(32px, 9vmin, 46px); }
+
   /* Pase del Arca */
   #pase { background: linear-gradient(#312e81, #6d28d9); color: #fff; gap: 12px; }
   #pase h2 { text-shadow: 0 3px 0 #0004; }
@@ -271,6 +286,7 @@
       <button id="bConstruir" class="modo construir"><span class="ico">🔨</span><b class="lbl"></b><small id="msgArca"></small><div id="arca"></div><span class="jugar"></span></button>
       <button id="bJugar" class="modo rescate"><span class="ico">🧭</span><b class="lbl"></b><small id="msgRescate"></small><span class="jugar"></span></button>
       <button id="bObby" class="modo carrera"><span class="ico">🏃</span><b class="lbl"></b><small id="msgObby"></small><span class="jugar"></span></button>
+      <button id="bIsla" class="modo creativo"><span class="ico">🏗️</span><b class="lbl"></b><small id="msgIsla"></small><span class="jugar"></span></button>
     </div>
   </div>
 </section>
@@ -312,6 +328,20 @@
   </div>
   <div id="mandosO">
     <div class="grupoMando"><button data-k="izq" aria-label="Izquierda">◀</button><button data-k="der" aria-label="Derecha">▶</button></div>
+    <div class="grupoMando"><button data-k="arriba" aria-label="Saltar" class="saltoGrande">⬆</button></div>
+  </div>
+</section>
+
+<section id="miIsla" class="pantalla">
+  <canvas id="lienzoIsla"></canvas>
+  <div id="herrIsla">
+    <div class="filaHerr" id="herramientas"></div>
+    <div class="filaHerr" id="materiales"></div>
+    <div id="retoIsla"><span class="txt"></span><button class="chip" id="retoIslaOir">🔊</button></div>
+  </div>
+  <div id="mandosI">
+    <div class="grupoMando"><button data-k="izq" aria-label="Izquierda">◀</button><button data-k="der" aria-label="Derecha">▶</button></div>
+    <div class="grupoMando columna"><button id="bBaileI" title="Bailar">💃</button><button id="bVistaI" title="Ver toda la isla">🔭</button></div>
     <div class="grupoMando"><button data-k="arriba" aria-label="Saltar" class="saltoGrande">⬆</button></div>
   </div>
 </section>
@@ -422,7 +452,7 @@ const LETRAS = 'ABCDEFGHIJLMNOPRSTUVZ';   // sin K, Ñ, Q, W, X, Y para no confu
 // ---------- Estado guardado (si el navegador lo permite) ----------
 const DEF = { estrellas: 0, coleccion: {}, madera: 30, mision: 0, obra: '', nivel: 1, arcas: 0,
               avatar: { cara: '👦', gorro: '🧢', color: '#4dabf7' }, nombre: '', idioma: 'ambos', bienvenida: false,
-              xp: 0, reclamado: 1, mascota: '', estela: '', baileFav: 'saludo', obby: { hechas: 0, records: {} }, diarias: { fecha: '', ids: [], prog: [], cofre: false } };
+              xp: 0, reclamado: 1, mascota: '', estela: '', baileFav: 'saludo', obby: { hechas: 0, records: {} }, isla: { celdas: {}, reto: 0 }, diarias: { fecha: '', ids: [], prog: [], cofre: false } };
 let E;
 try { E = JSON.parse(localStorage.getItem('arca.estado')) || {}; } catch { E = {}; }
 // Versión anterior: las tablas de 10 se convierten en madera para el arca grande
@@ -486,7 +516,7 @@ function avatarHTML(av, tam) {
 }
 function mostrar(id) {
   document.querySelectorAll('.pantalla').forEach(p => p.classList.toggle('activa', p.id === id));
-  enObra = id === 'obra'; enObby = id === 'obby';
+  enObra = id === 'obra'; enObby = id === 'obby'; enIsla = id === 'miIsla';
 }
 function barra() {
   $('cEstrellas').textContent = `⭐ ${E.estrellas}`;
@@ -549,6 +579,7 @@ const DIARIAS = {
   baile:   { ico: '💃', meta: 2,  es: n => `Baila ${n} veces`,                 en: n => `Dance ${n} times` },
   mascota: { ico: '🐾', meta: 3,  es: n => `Acaricia a tu mascota ${n} veces`, en: n => `Pet your pet ${n} times` },
   obby:    { ico: '🏃', meta: 1,  es: () => 'Termina una carrera de letras', en: () => 'Finish a letter run' },
+  isla:    { ico: '🏗️', meta: 10, es: n => `Pon ${n} piezas en tu isla`, en: n => `Place ${n} pieces on your island` },
 };
 const XP_DIARIA = 60, XP_COFRE = 100;
 const hoy = () => new Date().toLocaleDateString('sv');
@@ -584,7 +615,7 @@ function bailar(k, enElArca) {
   audio(); E.baileFav = k;
   b.notas.forEach((f, i) => tono(f, i * 0.14, 0.22, 'triangle', 0.13));
   evento('baile');
-  if (enElArca) { mono.emote = { k, t: 0 }; flotar(b.emo, mono.x, mono.y + 2.1); return; }
+  if (enElArca) { if (enIsla) { isl.emote = { k, t: 0 }; return; } mono.emote = { k, t: 0 }; flotar(b.emo, mono.x, mono.y + 2.1); return; }
   const el = $('avAnim'), ico = $('emoteIco');
   el.className = ''; ico.classList.remove('ver'); void el.offsetWidth;
   el.className = 'e-' + k; ico.textContent = b.emo; ico.classList.add('ver');
@@ -623,6 +654,8 @@ function pintarInicio() {
   $('msgRescate').textContent = `🐾 ${total} / ${ANIMALES.length}   ·   +${MADERA_RESCATE} 🪵`;
   $('bJugar').querySelector('.lbl').textContent = T('Rescatar animales', 'Rescue animals');
   $('bConstruir').querySelector('.lbl').textContent = T('Construir el arca', 'Build the ark');
+  $('bIsla').querySelector('.lbl').textContent = T('Mi isla', 'My island');
+  $('msgIsla').textContent = T('🧱 Construye lo que quieras', '🧱 Build anything you want') + (E.isla.reto < RETOS_ISLA.length ? `  ·  🎯 ${E.isla.reto}/${RETOS_ISLA.length}` : '  ·  🌟');
   $('bObby').querySelector('.lbl').textContent = T('Carrera de letras', 'Letter run');
   $('msgObby').textContent = T('🔤 Salta y junta las letras', '🔤 Jump and collect the letters') + (E.obby.hechas ? `  ·  🏁 ${E.obby.hechas}` : '');
   document.querySelectorAll('.modo .jugar').forEach(j => j.textContent = T('▶ Jugar', '▶ Play'));
@@ -1442,7 +1475,7 @@ const soltarDedo = () => { if (dedoAbajo) { dedoAbajo = false; guardarObra(); } 
 ['pointerup', 'pointercancel'].forEach(t => lienzo.addEventListener(t, soltarDedo));
 
 // Botones y teclado para mover al monito
-document.querySelectorAll('#mandos [data-k], #mandosO [data-k]').forEach(b => {
+document.querySelectorAll('#mandos [data-k], #mandosO [data-k], #mandosI [data-k]').forEach(b => {
   const k = b.dataset.k;
   const on = e => { e.preventDefault(); audio(); teclas[k] = true; if (k === 'arriba') teclas.saltar = true; b.classList.add('on'); };
   const off = () => { teclas[k] = false; b.classList.remove('on'); };
@@ -1451,7 +1484,7 @@ document.querySelectorAll('#mandos [data-k], #mandosO [data-k]').forEach(b => {
 });
 const MAPA_TECLAS = { ArrowLeft: 'izq', KeyA: 'izq', ArrowRight: 'der', KeyD: 'der', ArrowUp: 'arriba', KeyW: 'arriba', Space: 'arriba', ArrowDown: 'abajo', KeyS: 'abajo' };
 addEventListener('keydown', e => {
-  const k = MAPA_TECLAS[e.code]; if (!k || !(enObra || enObby)) return;
+  const k = MAPA_TECLAS[e.code]; if (!k || !(enObra || enObby || enIsla)) return;
   e.preventDefault(); if (k === 'arriba' && !e.repeat) teclas.saltar = true; teclas[k] = true;
 });
 addEventListener('keyup', e => { const k = MAPA_TECLAS[e.code]; if (k) teclas[k] = false; });
@@ -1758,6 +1791,294 @@ $('bObby').onclick = () => entrarObby();
 $('hudOir').onclick = () => ob && (ob.idx < ob.palabra.length ? decirLetras(false) : decir([{ l: ob.l, t: ob.a[ob.l][0] }]));
 $('bOtraCarrera').onclick = () => { $('finObby').classList.remove('abierta'); entrarObby(); };
 $('bObbyLobby').onclick = () => { $('finObby').classList.remove('abierta'); pintarInicio(); mostrar('inicio'); };
+
+// ---------- Mi isla: modo creativo con muros, pisos y rampas (como en los juegos de construir) ----------
+// Rejilla de lado: IC columnas × IF filas; fila 0 = el suelo. Pisos: se pisan desde arriba. Muros: sólidos. Rampas: se suben caminando.
+const IC = 40, IF = 10;
+const lienzoI = $('lienzoIsla'), ix = lienzoI.getContext('2d');
+let enIsla = false, ITS = 40, IW = 0, IH = 0, ibase = 0, icamX = 0, vistaI = false;
+const isl = { x: 3, y: 0, vx: 0, vy: 0, w: 0.6, h: 1.3, suelo: true, mira: 1, paso: 0, emote: null };
+const mascotaI = { x: 2, y: 0, dir: 1 };
+const MATS = { madera: ['#b7793f', '#7c4a21'], piedra: ['#a8b3c2', '#5b6778'], ladrillo: ['#dc4c3e', '#8f2a20'], vidrio: ['rgba(186,230,253,.55)', '#38bdf8'],
+               oro: ['#facc15', '#b45309'], pasto: ['#4ade80', '#15803d'], nieve: ['#f8fafc', '#94a3b8'], morado: ['#a78bfa', '#6d28d9'] };
+const HERR = [
+  { k: 'muro', ico: '🧱', es: 'Muro', en: 'Wall' }, { k: 'piso', ico: '▬', es: 'Piso', en: 'Floor' },
+  { k: 'rampa', ico: '◢', es: 'Rampa', en: 'Ramp' }, { k: 'deco', ico: '🌳', es: 'Cosas', en: 'Things' },
+  { k: 'borrar', ico: '🧽', es: 'Borrar', en: 'Erase' }, { k: 'deshacer', ico: '↩️', es: 'Deshacer', en: 'Undo' },
+];
+const DECOS = ['🌳', '🌴', '🌷', '🌻', '🍄', '🪨', '⛺', '🏠', '🍎', '🎈', '⭐', '🌈'];
+const esAnimal = e => ANIMALES.some(a => a.emo === e);
+let herr = 'muro', mat = 'madera', deco = '🌳', dirRampa = 1, deshacer = [], trazo = null, ultimaCelda = '', confeti = [];
+const celdas = () => E.isla.celdas;
+const celda = (c, r) => celdas()[c + ',' + r];
+
+function medirIsla() {
+  const dpr = Math.min(devicePixelRatio || 1, 2);
+  IW = innerWidth; IH = innerHeight;
+  lienzoI.width = IW * dpr; lienzoI.height = IH * dpr; ix.setTransform(dpr, 0, 0, dpr, 0, 0);
+  ibase = IH - Math.max(110, Math.min(IW, IH) * 0.15 + 34);
+  const arriba = $('herrIsla').getBoundingClientRect().bottom + 6;
+  ITS = vistaI ? Math.min((IW - 16) / (IC + 2), (ibase - arriba) / (IF + 0.3)) : Math.max(26, Math.min((ibase - arriba) / (IF + 0.3), IW / 9));
+}
+addEventListener('resize', () => { if (enIsla) medirIsla(); });
+const isx = x => (x - icamX) * ITS, isy = y => ibase - y * ITS;
+
+// La superficie más alta bajo x que no pase de ymax (suelo, pisos, muros y rampas)
+function superficie(x, ymax) {
+  let mejor = 0;
+  for (const dx of [-0.25, 0, 0.25]) {
+    const xx = x + dx, c = Math.floor(xx);
+    for (let r = 0; r < IF; r++) {
+      const p = celda(c, r); if (!p) continue;
+      let top = null;
+      if (p.t === 'muro') top = r + 1;
+      else if (p.t === 'piso') top = r + 0.2;
+      else if (p.t === 'rampa' && dx === 0) { const f = xx - c; top = r + (p.d > 0 ? f : 1 - f); }
+      if (top !== null && top <= ymax + 1e-6 && top > mejor) mejor = top;
+    }
+  }
+  return mejor;
+}
+function muroEn(x0, x1, y0, y1) {
+  for (let c = Math.floor(x0); c <= Math.floor(x1 - 1e-6); c++)
+    for (let r = Math.max(0, Math.floor(y0)); r <= Math.floor(y1 - 1e-6) && r < IF; r++) if (celda(c, r)?.t === 'muro') return true;
+  return false;
+}
+function moverIsl(dt) {
+  const j = isl, estabaSuelo = j.suelo;
+  j.vx = ((teclas.der ? 1 : 0) - (teclas.izq ? 1 : 0)) * 4.5;
+  if (j.vx) j.mira = Math.sign(j.vx);
+  if (teclas.saltar && j.suelo) { j.vy = 9.5; j.suelo = false; tono(520, 0, 0.12, 'sine', 0.08); }
+  teclas.saltar = false;
+  j.vy = Math.max(-15, j.vy - 25 * dt);
+  // Horizontal: los muros detienen
+  const nx = Math.max(0.3, Math.min(IC - 0.3, j.x + j.vx * dt));
+  if (!muroEn(nx - j.w / 2, nx + j.w / 2, j.y + 0.05, j.y + j.h)) j.x = nx;
+  // Vertical
+  let ny = j.y + j.vy * dt;
+  if (j.vy > 0) {
+    if (muroEn(j.x - j.w / 2 + 0.05, j.x + j.w / 2 - 0.05, ny + j.h - 0.1, ny + j.h)) { j.vy = 0; ny = j.y; }   // cabezazo con un muro
+    j.suelo = false;
+  } else {
+    const s = superficie(j.x, j.y + (estabaSuelo ? 0.45 : 0.02));   // en el suelo sube rampas y escalones bajitos
+    if (ny <= s || (estabaSuelo && j.y - s < 0.5)) { ny = s; j.vy = 0; j.suelo = true; } else j.suelo = false;
+  }
+  j.y = ny;
+  if (j.vx && j.suelo) j.paso += dt * 12;
+  if (j.emote && (j.emote.t += dt) > 1.4) j.emote = null;
+  // Mascota
+  const meta = j.x - j.mira * 0.9;
+  if (Math.abs(meta - mascotaI.x) > 6) { mascotaI.x = meta; mascotaI.y = j.y; }
+  const vx = (meta - mascotaI.x) * Math.min(1, dt * 4);
+  if (Math.abs(vx) > 0.002) mascotaI.dir = Math.sign(vx);
+  mascotaI.x += vx; mascotaI.y += (j.y - mascotaI.y) * Math.min(1, dt * 5);
+}
+
+// ---------- Construir en la isla ----------
+function ponerEnCelda(c, r) {
+  if (c < 0 || c >= IC || r < 0 || r >= IF) return;
+  const k = c + ',' + r, antes = celdas()[k];
+  let nueva;
+  if (herr === 'borrar') { if (!antes) return; nueva = undefined; }
+  else if (herr === 'muro' || herr === 'piso') nueva = { t: herr, m: mat };
+  else if (herr === 'rampa') nueva = { t: 'rampa', m: mat, d: dirRampa };
+  else if (herr === 'deco') nueva = { t: 'deco', e: deco };
+  else return;
+  if (JSON.stringify(antes) === JSON.stringify(nueva)) return;
+  trazo?.push({ k, antes });
+  if (nueva) celdas()[k] = nueva; else delete celdas()[k];
+  // Si un muro cae encima del monito, el monito queda arriba
+  if (nueva?.t === 'muro' && Math.abs(isl.x - (c + 0.5)) < 0.8 && isl.y < r + 1 && isl.y + isl.h > r) { isl.y = r + 1; isl.vy = 0; }
+  if (nueva) {
+    tono([392, 440, 523, 587, 659, 784][r % 6], 0, 0.1, 'triangle', 0.12); if (nueva.t !== 'deco') tono(110, 0, 0.05, 'square', 0.05);
+    if (esAnimal(nueva.e)) { const a = ANIMALES.find(a => a.emo === nueva.e); di(a.es[0], a.en[0]); }
+    evento('isla');
+  } else tono(300, 0, 0.08, 'sine', 0.1);
+  revisarReto();
+}
+function celdaDe(px, py) { return [Math.floor(px / ITS + icamX), Math.floor((ibase - py) / ITS)]; }
+lienzoI.addEventListener('pointerdown', e => {
+  audio(); try { lienzoI.setPointerCapture(e.pointerId); } catch {}
+  trazo = []; const [c, r] = celdaDe(e.clientX, e.clientY); ultimaCelda = c + ',' + r; ponerEnCelda(c, r);
+});
+lienzoI.addEventListener('pointermove', e => {
+  if (!trazo) return;
+  const [c, r] = celdaDe(e.clientX, e.clientY), k = c + ',' + r;
+  if (k !== ultimaCelda) { ultimaCelda = k; ponerEnCelda(c, r); }
+});
+['pointerup', 'pointercancel'].forEach(t => lienzoI.addEventListener(t, () => { if (trazo?.length) deshacer.push(trazo); trazo = null; guardar(); }));
+function deshacerTrazo() {
+  const t = deshacer.pop(); if (!t) { sfx.casi(); return; }
+  for (const { k, antes } of t.reverse()) { if (antes) celdas()[k] = antes; else delete celdas()[k]; }
+  sfx.pop(); guardar();
+}
+
+// ---------- Herramientas ----------
+function pintarHerr() {
+  const h = $('herramientas'); h.innerHTML = '';
+  for (const t of HERR) {
+    const b = document.createElement('button');
+    b.textContent = t.k === 'rampa' ? (dirRampa > 0 ? '◢' : '◣') : t.ico;
+    if (t.k === 'piso') b.style.color = MATS[mat][1];
+    b.className = herr === t.k ? 'sel' : '';
+    b.onclick = () => {
+      audio(); sfx.pop();
+      if (t.k === 'deshacer') { deshacerTrazo(); return; }
+      if (t.k === 'rampa' && herr === 'rampa') dirRampa *= -1;   // tocar otra vez: la rampa mira al otro lado
+      herr = t.k; di(t.es, t.en); pintarHerr();
+    };
+    h.appendChild(b);
+  }
+  const m = $('materiales'); m.innerHTML = '';
+  if (herr === 'deco') {
+    const misAnimales = ANIMALES.filter(a => E.coleccion[a.id]).map(a => a.emo);
+    for (const e of [...DECOS, ...misAnimales]) {
+      const b = document.createElement('button');
+      b.textContent = e; b.className = deco === e ? 'sel' : ''; b.style.borderRadius = '14px'; b.style.border = 'none';
+      b.onclick = () => { deco = e; sfx.pop(); pintarHerr(); };
+      m.appendChild(b);
+    }
+  } else if (herr !== 'borrar') {
+    for (const [k, [c1, c2]] of Object.entries(MATS)) {
+      const b = document.createElement('button');
+      b.style.background = `linear-gradient(135deg, ${c1}, ${c2})`; b.className = mat === k ? 'sel' : '';
+      b.setAttribute('aria-label', k);
+      b.onclick = () => { mat = k; sfx.pop(); pintarHerr(); };
+      m.appendChild(b);
+    }
+  }
+}
+
+// ---------- Retos de construcción ----------
+const cuenta = t => Object.values(celdas()).filter(p => p.t === t).length;
+const torre = () => { let max = 0; for (let c = 0; c < IC; c++) { let r = 0; while (celda(c, r)?.t === 'muro') r++; max = Math.max(max, r); } return max; };
+const filaLarga = () => { let max = 0; for (let r = 1; r < IF; r++) { let n = 0; for (let c = 0; c < IC; c++) { n = celda(c, r)?.t === 'piso' ? n + 1 : 0; max = Math.max(max, n); } } return max; };
+function casa() {   // dos muros en el suelo y un techo de pisos encima, de una pared a la otra
+  const tapa = (c, r) => ['piso', 'muro'].includes(celda(c, r)?.t);
+  for (let c = 0; c < IC; c++) for (let k = 2; k <= 8 && c + k < IC; k++) {
+    if (celda(c, 0)?.t !== 'muro' || celda(c + k, 0)?.t !== 'muro') continue;
+    let ok = true; for (let x = c; x <= c + k; x++) if (!tapa(x, 1)) { ok = false; break; }
+    if (ok) return true;
+  }
+  return false;
+}
+const RETOS_ISLA = [
+  { es: 'Pon 5 muros', en: 'Place 5 walls', prog: () => [cuenta('muro'), 5] },
+  { es: 'Haz una torre de 4 muros', en: 'Build a tower of 4 walls', prog: () => [torre(), 4] },
+  { es: 'Pon 2 rampas', en: 'Place 2 ramps', prog: () => [cuenta('rampa'), 2] },
+  { es: 'Sube hasta arriba de tu torre', en: 'Climb to the top of your tower', prog: () => [isl.suelo ? Math.floor(isl.y + 0.05) : 0, 4] },
+  { es: 'Pon 3 árboles o animales', en: 'Place 3 trees or animals', prog: () => [cuenta('deco'), 3] },
+  { es: 'Haz una casa: 2 muros y un techo', en: 'Build a house: 2 walls and a roof', prog: () => [casa() ? 1 : 0, 1] },
+  { es: 'Haz el piso del arca: 8 pisos en fila', en: 'Build the ark floor: 8 floors in a row', prog: () => [filaLarga(), 8] },
+];
+const XP_RETO_ISLA = 40;
+let tRetoVisto = '';
+function pintarReto() {
+  const i = E.isla.reto, r = RETOS_ISLA[i], el = $('retoIsla').querySelector('.txt');
+  if (!r) { el.textContent = T('🌟 ¡Modo libre! Construye lo que quieras', '🌟 Free mode! Build anything'); return; }
+  const [a, b] = r.prog(), txt = `🎯 ${T(r.es, r.en)}  ${b > 1 ? `${Math.min(a, b)}/${b}` : ''}`;
+  if (txt !== tRetoVisto) { el.textContent = txt; tRetoVisto = txt; }
+}
+function revisarReto() {
+  const r = RETOS_ISLA[E.isla.reto]; if (!r) return;
+  const [a, b] = r.prog();
+  if (a < b) { pintarReto(); return; }
+  E.isla.reto++; E.estrellas += 5; guardar(); ganarXP(XP_RETO_ISLA);
+  sfx.fanfarria();
+  for (let k = 0; k < 40; k++) confeti.push({ x: isl.x, y: isl.y + 1.5, vx: (Math.random() - 0.5) * 10, vy: 4 + Math.random() * 7, vida: 1.4, col: COLORES_O[k % 6] });
+  toast(T(`🎯 ¡Reto cumplido! +5 ⭐ +${XP_RETO_ISLA} XP`, `🎯 Challenge done! +5 ⭐ +${XP_RETO_ISLA} XP`));
+  di('¡Reto cumplido!', 'Challenge complete!');
+  pintarReto();
+  const sig = RETOS_ISLA[E.isla.reto];
+  setTimeout(() => {
+    if (!enIsla) return;
+    if (sig && sig.prog()[0] >= sig.prog()[1]) { revisarReto(); return; }   // si el siguiente ya está hecho, también cuenta
+    sig ? di(sig.es, sig.en) : di('¡Modo libre! Construye lo que quieras.', 'Free mode! Build anything you want.');
+  }, 2600);
+}
+$('retoIslaOir').onclick = () => { const r = RETOS_ISLA[E.isla.reto]; r ? di(r.es, r.en) : di('¡Modo libre! Construye lo que quieras.', 'Free mode! Build anything you want.'); };
+
+// ---------- Dibujo de la isla ----------
+function dibujarPiezaIsla(g, c, r, p, ahora) {
+  const x = isx(c), y = isy(r + 1), s = ITS;
+  if (x > IW + s || x + s < -s) return;
+  if (p.t === 'deco') {
+    const bote = esAnimal(p.e) ? Math.abs(Math.sin(ahora * 3 + c)) * s * 0.08 : 0;
+    emoji(p.e, x + s / 2, y + s * 0.55 - bote, s * 0.9, g); return;
+  }
+  const [c1, c2] = MATS[p.m] || MATS.madera;
+  g.fillStyle = c1; g.strokeStyle = c2; g.lineWidth = 2;
+  if (p.t === 'piso') { g.fillRect(x, y + s * 0.8, s, s * 0.2); g.strokeRect(x + 1, y + s * 0.8 + 1, s - 2, s * 0.2 - 2); return; }
+  if (p.t === 'rampa') {
+    g.beginPath();
+    if (p.d > 0) { g.moveTo(x, y + s); g.lineTo(x + s, y + s); g.lineTo(x + s, y); } else { g.moveTo(x + s, y + s); g.lineTo(x, y + s); g.lineTo(x, y); }
+    g.closePath(); g.fill(); g.stroke();
+    g.beginPath(); for (let k = 1; k < 4; k++) { const f = k / 4; p.d > 0 ? (g.moveTo(x + s * f, y + s), g.lineTo(x + s * f, y + s - s * f)) : (g.moveTo(x + s - s * f, y + s), g.lineTo(x + s - s * f, y + s - s * f)); }
+    g.stroke(); return;
+  }
+  g.fillRect(x, y, s, s); g.strokeRect(x + 1, y + 1, s - 2, s - 2);   // muro, con la textura de su material
+  g.beginPath();
+  if (p.m === 'ladrillo') { g.moveTo(x, y + s / 2); g.lineTo(x + s, y + s / 2); g.moveTo(x + s / 2, y); g.lineTo(x + s / 2, y + s / 2); g.moveTo(x + s / 4, y + s / 2); g.lineTo(x + s / 4, y + s); g.moveTo(x + 3 * s / 4, y + s / 2); g.lineTo(x + 3 * s / 4, y + s); }
+  else if (p.m === 'madera') { g.moveTo(x, y + s / 3); g.lineTo(x + s, y + s / 3); g.moveTo(x, y + 2 * s / 3); g.lineTo(x + s, y + 2 * s / 3); }
+  else if (p.m === 'piedra') { g.moveTo(x + s * 0.2, y + s * 0.3); g.lineTo(x + s * 0.5, y + s * 0.4); g.moveTo(x + s * 0.6, y + s * 0.7); g.lineTo(x + s * 0.85, y + s * 0.6); }
+  g.stroke();
+  if (p.m === 'vidrio' || p.m === 'oro') { g.strokeStyle = '#ffffffaa'; g.lineWidth = 3; g.beginPath(); g.moveTo(x + s * 0.2, y + s * 0.6); g.lineTo(x + s * 0.6, y + s * 0.2); g.stroke(); }
+}
+function dibujarIsla(dt) {
+  const g = ix, ahora = performance.now() / 1000;
+  const objetivo = vistaI ? -1 : Math.max(-3, Math.min(IC + 3 - IW / ITS, isl.x - IW / ITS / 2));
+  icamX += (objetivo - icamX) * Math.min(1, dt * 6);
+  const cielo = g.createLinearGradient(0, 0, 0, ibase);
+  cielo.addColorStop(0, '#7cc8ff'); cielo.addColorStop(1, '#e0f6ff');
+  g.fillStyle = cielo; g.fillRect(0, 0, IW, IH);
+  emoji('☀️', IW - 50, IH * 0.32, 50, g);
+  for (let k = 0; k < 3; k++) emoji('☁️', ((ahora * (10 + k * 4) + k * 300) % (IW + 300)) - 150, IH * 0.3 + k * 40, 56, g);
+  // Mar y la isla
+  g.fillStyle = '#2563eb'; g.fillRect(0, ibase + ITS * 0.3, IW, IH);
+  g.fillStyle = '#fde68a'; g.beginPath(); g.roundRect?.(isx(-1.5), ibase, (IC + 3) * ITS, IH, 30); g.fill();
+  g.fillStyle = '#4ade80'; g.fillRect(isx(0), ibase, IC * ITS, ITS * 0.25);
+  g.fillStyle = '#a16207'; g.fillRect(isx(0), ibase + ITS * 0.25, IC * ITS, IH);
+  emoji('🌴', isx(-1), ibase - ITS * 0.8, ITS * 1.8, g); emoji('🌴', isx(IC + 1), ibase - ITS * 0.8, ITS * 1.8, g);
+  // Rejilla suave para saber dónde va cada pieza
+  g.strokeStyle = '#ffffff40'; g.lineWidth = 1; g.beginPath();
+  for (let c = 0; c <= IC; c++) { const x = isx(c); if (x < -2 || x > IW + 2) continue; g.moveTo(x, isy(0)); g.lineTo(x, isy(IF)); }
+  for (let r = 0; r <= IF; r++) { g.moveTo(isx(0), isy(r)); g.lineTo(isx(IC), isy(r)); }
+  g.stroke();
+  // Piezas (las cosas y animales al final, delante)
+  const todas = Object.entries(celdas()).map(([k, p]) => { const [c, r] = k.split(',').map(Number); return { c, r, p }; });
+  for (const { c, r, p } of todas) if (p.t !== 'deco') dibujarPiezaIsla(g, c, r, p, ahora);
+  for (const { c, r, p } of todas) if (p.t === 'deco') dibujarPiezaIsla(g, c, r, p, ahora);
+  // Monito, mascota y confeti
+  pintarMonito(g, isx(isl.x), isy(isl.y), isl.h * ITS, isl);
+  if (E.mascota) {
+    g.save(); g.translate(isx(mascotaI.x), isy(mascotaI.y + 0.35 + Math.abs(Math.sin(ahora * 8)) * 0.08));
+    if (mascotaI.dir > 0) g.scale(-1, 1);
+    emoji(E.mascota, 0, 0, ITS * 0.6, g); g.restore();
+  }
+  confeti = confeti.filter(d => (d.vida -= dt) > 0);
+  for (const d of confeti) { d.x += d.vx * dt; d.y += d.vy * dt; d.vy -= 12 * dt; g.fillStyle = d.col; g.fillRect(isx(d.x) - 4, isy(d.y) - 4, 8, 8); }
+}
+function entrarIsla() {
+  mostrar('miIsla'); pintarHerr(); medirIsla();
+  isl.y = superficie(isl.x, IF + 1); isl.vy = 0;
+  icamX = vistaI ? -1 : Math.max(-3, isl.x - IW / ITS / 2);
+  tRetoVisto = ''; pintarReto();
+  let tAnt = 0;
+  const bucle = t => {
+    if (!enIsla) return;
+    const dt = Math.min(0.05, (t - tAnt) / 1000 || 0); tAnt = t;
+    moverIsl(dt);
+    if (RETOS_ISLA[E.isla.reto]?.prog === RETOS_ISLA[3].prog) revisarReto();   // el reto de subir se revisa mientras camina
+    dibujarIsla(dt);
+    requestAnimationFrame(bucle);
+  };
+  requestAnimationFrame(t => { tAnt = t; bucle(t); });
+  const r = RETOS_ISLA[E.isla.reto];
+  setTimeout(() => enIsla && (r ? di(r.es, r.en) : di('¡Tu isla! Construye lo que quieras.', 'Your island! Build anything you want.')), 300);
+}
+$('bIsla').onclick = () => entrarIsla();
+$('bBaileI').onclick = () => bailar(bailesMios().includes(E.baileFav) ? E.baileFav : 'saludo', true);
+$('bVistaI').onclick = () => { vistaI = !vistaI; $('bVistaI').classList.toggle('on', vistaI); medirIsla(); };
 
 // ---------- Ajustes para adultos (mantener 🔒 3 segundos) ----------
 const bCand = $('candado');
