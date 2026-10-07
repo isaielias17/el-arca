@@ -187,6 +187,22 @@
   .modo #arca svg { width: 100%; height: auto; display: block; }
   #bPersonaje, #bAlbum { font-size: 16px; }
 
+  .modo.carrera { background: linear-gradient(135deg, #3b82f6, #7c3aed); }
+
+  /* Carrera de letras (obby) */
+  #obby { padding: 0; background: #7cc8ff; overflow: hidden; }
+  #lienzoObby { position: absolute; inset: 0; width: 100%; height: 100%; touch-action: none; }
+  #hudObby { position: absolute; top: max(56px, calc(env(safe-area-inset-top) + 50px)); left: 8px; right: 8px; margin: 0 auto; width: fit-content; display: flex; align-items: center; gap: 8px; background: #fffffff0; border-radius: 20px; padding: 6px 10px; box-shadow: 0 4px 0 #0002; z-index: 4; max-width: 96vw; }
+  #hudAnimal { font-size: clamp(30px, 7vmin, 44px); line-height: 1; }
+  #hudLetras { display: flex; gap: 4px; flex-wrap: wrap; justify-content: center; }
+  .casilla { width: clamp(30px, 7vmin, 44px); height: clamp(36px, 8.5vmin, 52px); border-radius: 10px; border: 3px dashed #94a3b8; display: grid; place-items: center; font-size: clamp(20px, 5vmin, 32px); font-weight: 900; color: #cbd5e1; background: #fff; }
+  .casilla.ya { border: 3px solid #16a34a; background: #22c55e; color: #fff; }
+  .casilla.sig { border: 3px solid #f59e0b; color: #b45309; background: #fef3c7; animation: pulsa 1s infinite; }
+  #mandosO { position: absolute; left: 0; right: 0; bottom: 0; padding: 10px 12px max(10px, env(safe-area-inset-bottom)); display: flex; justify-content: space-between; align-items: flex-end; z-index: 4; pointer-events: none; }
+  #mandosO .grupoMando button.saltoGrande { width: clamp(76px, 19vmin, 104px); height: clamp(76px, 19vmin, 104px); font-size: clamp(32px, 9vmin, 46px); }
+  #finObby .tarjeta { background: linear-gradient(#e0f2fe, #fff); }
+  #finObbyPalabra span { display: inline-block; animation: aparece .5s backwards; color: #16a34a; }
+
   /* Pase del Arca */
   #pase { background: linear-gradient(#312e81, #6d28d9); color: #fff; gap: 12px; }
   #pase h2 { text-shadow: 0 3px 0 #0004; }
@@ -254,6 +270,7 @@
     <div id="modos">
       <button id="bConstruir" class="modo construir"><span class="ico">🔨</span><b class="lbl"></b><small id="msgArca"></small><div id="arca"></div><span class="jugar"></span></button>
       <button id="bJugar" class="modo rescate"><span class="ico">🧭</span><b class="lbl"></b><small id="msgRescate"></small><span class="jugar"></span></button>
+      <button id="bObby" class="modo carrera"><span class="ico">🏃</span><b class="lbl"></b><small id="msgObby"></small><span class="jugar"></span></button>
     </div>
   </div>
 </section>
@@ -285,6 +302,20 @@
   </div>
 </section>
 
+<section id="obby" class="pantalla">
+  <canvas id="lienzoObby"></canvas>
+  <div id="hudObby">
+    <span id="hudAnimal"></span>
+    <div id="hudLetras"></div>
+    <button id="hudOir" class="chip">🔊</button>
+    <span id="hudTiempo" class="chip">⏱ 0</span>
+  </div>
+  <div id="mandosO">
+    <div class="grupoMando"><button data-k="izq" aria-label="Izquierda">◀</button><button data-k="der" aria-label="Derecha">▶</button></div>
+    <div class="grupoMando"><button data-k="arriba" aria-label="Saltar" class="saltoGrande">⬆</button></div>
+  </div>
+</section>
+
 <section id="personaje" class="pantalla">
   <h2 class="lbl-personaje"></h2>
   <div id="vistaAvatar"></div>
@@ -312,6 +343,17 @@
   <div class="texto-grande" id="festejoTexto"></div>
   <div class="texto-grande" id="festejoEstrellas"></div>
   <button class="grande" id="festejoSeguir">👍</button>
+</div></div>
+
+<div id="finObby" class="capa"><div class="tarjeta">
+  <div class="pareja" id="finObbyAnimal"></div>
+  <div class="palabra" id="finObbyPalabra"></div>
+  <div class="texto-grande" id="finObbyTexto"></div>
+  <div class="texto-grande" id="finObbyPremio"></div>
+  <div class="fila-botones">
+    <button class="grande" id="bOtraCarrera"></button>
+    <button class="medio" id="bObbyLobby">🏝️ Lobby</button>
+  </div>
 </div></div>
 
 <div id="premio" class="capa"><div class="tarjeta">
@@ -380,7 +422,7 @@ const LETRAS = 'ABCDEFGHIJLMNOPRSTUVZ';   // sin K, Ñ, Q, W, X, Y para no confu
 // ---------- Estado guardado (si el navegador lo permite) ----------
 const DEF = { estrellas: 0, coleccion: {}, madera: 30, mision: 0, obra: '', nivel: 1, arcas: 0,
               avatar: { cara: '👦', gorro: '🧢', color: '#4dabf7' }, nombre: '', idioma: 'ambos', bienvenida: false,
-              xp: 0, reclamado: 1, mascota: '', estela: '', baileFav: 'saludo', diarias: { fecha: '', ids: [], prog: [], cofre: false } };
+              xp: 0, reclamado: 1, mascota: '', estela: '', baileFav: 'saludo', obby: { hechas: 0, records: {} }, diarias: { fecha: '', ids: [], prog: [], cofre: false } };
 let E;
 try { E = JSON.parse(localStorage.getItem('arca.estado')) || {}; } catch { E = {}; }
 // Versión anterior: las tablas de 10 se convierten en madera para el arca grande
@@ -444,7 +486,7 @@ function avatarHTML(av, tam) {
 }
 function mostrar(id) {
   document.querySelectorAll('.pantalla').forEach(p => p.classList.toggle('activa', p.id === id));
-  enObra = id === 'obra';
+  enObra = id === 'obra'; enObby = id === 'obby';
 }
 function barra() {
   $('cEstrellas').textContent = `⭐ ${E.estrellas}`;
@@ -506,6 +548,7 @@ const DIARIAS = {
   contar:  { ico: '🔢', meta: 2,  es: n => `Cuenta animales ${n} veces`,       en: n => `Count animals ${n} times` },
   baile:   { ico: '💃', meta: 2,  es: n => `Baila ${n} veces`,                 en: n => `Dance ${n} times` },
   mascota: { ico: '🐾', meta: 3,  es: n => `Acaricia a tu mascota ${n} veces`, en: n => `Pet your pet ${n} times` },
+  obby:    { ico: '🏃', meta: 1,  es: () => 'Termina una carrera de letras', en: () => 'Finish a letter run' },
 };
 const XP_DIARIA = 60, XP_COFRE = 100;
 const hoy = () => new Date().toLocaleDateString('sv');
@@ -580,6 +623,8 @@ function pintarInicio() {
   $('msgRescate').textContent = `🐾 ${total} / ${ANIMALES.length}   ·   +${MADERA_RESCATE} 🪵`;
   $('bJugar').querySelector('.lbl').textContent = T('Rescatar animales', 'Rescue animals');
   $('bConstruir').querySelector('.lbl').textContent = T('Construir el arca', 'Build the ark');
+  $('bObby').querySelector('.lbl').textContent = T('Carrera de letras', 'Letter run');
+  $('msgObby').textContent = T('🔤 Salta y junta las letras', '🔤 Jump and collect the letters') + (E.obby.hechas ? `  ·  🏁 ${E.obby.hechas}` : '');
   document.querySelectorAll('.modo .jugar').forEach(j => j.textContent = T('▶ Jugar', '▶ Play'));
   $('bJugar').querySelector('.jugar').classList.toggle('pulsa', !puedeConstruir && !terminada);
   $('bConstruir').querySelector('.jugar').classList.toggle('pulsa', puedeConstruir);
@@ -1079,7 +1124,7 @@ function medirObra() {
 addEventListener('resize', () => { if (enObra) medirObra(); });
 const sx = x => (x - camX) * TS, sy = y => baseY - y * TS;
 const EMOJI = '"Apple Color Emoji","Segoe UI Emoji","Noto Color Emoji",system-ui,sans-serif';
-function emoji(t, x, y, tam) { cx.font = `${tam}px ${EMOJI}`; cx.textAlign = 'center'; cx.textBaseline = 'middle'; cx.fillText(t, x, y); }
+function emoji(t, x, y, tam, g = cx) { g.font = `${tam}px ${EMOJI}`; g.textAlign = 'center'; g.textBaseline = 'middle'; g.fillText(t, x, y); }
 
 function dibujarPieza(p, estado, pulso) {
   const b = caja(p), x = sx(b.x), y = sy(b.y + b.h), w = b.w * TS, h = b.h * TS;
@@ -1108,27 +1153,28 @@ function dibujarPieza(p, estado, pulso) {
   cx.strokeStyle = brea ? '#1c130d' : '#5c2e0e'; cx.lineWidth = 1; cx.strokeRect(x + 0.5, y + 0.5, w - 1, h - 1);
   if (h > TS * 0.5) { cx.beginPath(); cx.moveTo(x, y + h / 3); cx.lineTo(x + w, y + h / 3); cx.moveTo(x, y + 2 * h / 3); cx.lineTo(x + w, y + 2 * h / 3); cx.stroke(); }
 }
-function dibujarMono() {
-  const px = sx(mono.x), py = sy(mono.y), h = mono.h * TS, av = E.avatar;
-  cx.save(); cx.translate(px, py);
-  const em = mono.emote, q = em ? em.t / 1.4 : 0;   // el baile que está haciendo (0 → 1)
-  if (em?.k === 'voltereta') { cx.translate(0, -Math.sin(q * Math.PI) * h * 0.9 - h / 2); cx.rotate(q * Math.PI * 2); cx.translate(0, h / 2); }
-  else if (em?.k === 'baile') { cx.translate(0, -Math.abs(Math.sin(q * Math.PI * 6)) * h * 0.15); cx.rotate(Math.sin(q * Math.PI * 6) * 0.25); }
-  else if (em?.k === 'giro') { cx.translate(0, -Math.sin(q * Math.PI) * h * 0.4); cx.scale(Math.cos(q * Math.PI * 4), 1); }
-  else if (em?.k === 'robot') cx.translate(Math.round(Math.sin(q * Math.PI * 8)) * h * 0.08, Math.round(Math.sin(q * Math.PI * 4)) * -h * 0.05);
-  if (mono.mira < 0) cx.scale(-1, 1);
-  if (em?.k === 'saludo') emoji('👋', h * 0.38, -h * 0.85 + Math.sin(q * Math.PI * 8) * h * 0.06, h * 0.3);
-  const balanceo = Math.sin(mono.paso) * 0.35 * (mono.vx && mono.suelo ? 1 : 0);
-  cx.strokeStyle = '#1f2937'; cx.lineWidth = Math.max(3, TS * 0.08); cx.lineCap = 'round';
-  cx.beginPath();
-  cx.moveTo(0, -h * 0.3); cx.lineTo(Math.sin(balanceo) * h * 0.25, 0);
-  cx.moveTo(0, -h * 0.3); cx.lineTo(-Math.sin(balanceo) * h * 0.25, 0);
-  cx.stroke();
-  cx.fillStyle = av.color; cx.beginPath(); cx.roundRect?.(-h * 0.17, -h * 0.62, h * 0.34, h * 0.36, 6); cx.fill();
-  cx.beginPath(); cx.arc(0, -h * 0.76, h * 0.22, 0, 7); cx.fill();
-  emoji(av.cara, 0, -h * 0.76, h * 0.34);
-  if (av.gorro) emoji(av.gorro, 0, -h * 0.98, h * 0.28);
-  cx.restore();
+function dibujarMono() { pintarMonito(cx, sx(mono.x), sy(mono.y), mono.h * TS, mono); }
+function pintarMonito(g, px, py, h, o) {   // o: mira, paso, vx, suelo y emote del monito
+  const av = E.avatar;
+  g.save(); g.translate(px, py);
+  const em = o.emote, q = em ? em.t / 1.4 : 0;   // el baile que está haciendo (0 → 1)
+  if (em?.k === 'voltereta') { g.translate(0, -Math.sin(q * Math.PI) * h * 0.9 - h / 2); g.rotate(q * Math.PI * 2); g.translate(0, h / 2); }
+  else if (em?.k === 'baile') { g.translate(0, -Math.abs(Math.sin(q * Math.PI * 6)) * h * 0.15); g.rotate(Math.sin(q * Math.PI * 6) * 0.25); }
+  else if (em?.k === 'giro') { g.translate(0, -Math.sin(q * Math.PI) * h * 0.4); g.scale(Math.cos(q * Math.PI * 4), 1); }
+  else if (em?.k === 'robot') g.translate(Math.round(Math.sin(q * Math.PI * 8)) * h * 0.08, Math.round(Math.sin(q * Math.PI * 4)) * -h * 0.05);
+  if (o.mira < 0) g.scale(-1, 1);
+  if (em?.k === 'saludo') emoji('👋', h * 0.38, -h * 0.85 + Math.sin(q * Math.PI * 8) * h * 0.06, h * 0.3, g);
+  const balanceo = Math.sin(o.paso) * 0.35 * (o.vx && o.suelo ? 1 : 0);
+  g.strokeStyle = '#1f2937'; g.lineWidth = Math.max(3, h * 0.06); g.lineCap = 'round';
+  g.beginPath();
+  g.moveTo(0, -h * 0.3); g.lineTo(Math.sin(balanceo) * h * 0.25, 0);
+  g.moveTo(0, -h * 0.3); g.lineTo(-Math.sin(balanceo) * h * 0.25, 0);
+  g.stroke();
+  g.fillStyle = av.color; g.beginPath(); g.roundRect?.(-h * 0.17, -h * 0.62, h * 0.34, h * 0.36, 6); g.fill();
+  g.beginPath(); g.arc(0, -h * 0.76, h * 0.22, 0, 7); g.fill();
+  emoji(av.cara, 0, -h * 0.76, h * 0.34, g);
+  if (av.gorro) emoji(av.gorro, 0, -h * 0.98, h * 0.28, g);
+  g.restore();
 }
 function dibujarObra(dt) {
   const objetivo = vista ? MARGEN - 1 : Math.max(0, Math.min(MUNDO_W - W2 / TS, mono.x - W2 / TS / 2));
@@ -1396,7 +1442,7 @@ const soltarDedo = () => { if (dedoAbajo) { dedoAbajo = false; guardarObra(); } 
 ['pointerup', 'pointercancel'].forEach(t => lienzo.addEventListener(t, soltarDedo));
 
 // Botones y teclado para mover al monito
-document.querySelectorAll('#mandos [data-k]').forEach(b => {
+document.querySelectorAll('#mandos [data-k], #mandosO [data-k]').forEach(b => {
   const k = b.dataset.k;
   const on = e => { e.preventDefault(); audio(); teclas[k] = true; if (k === 'arriba') teclas.saltar = true; b.classList.add('on'); };
   const off = () => { teclas[k] = false; b.classList.remove('on'); };
@@ -1405,7 +1451,7 @@ document.querySelectorAll('#mandos [data-k]').forEach(b => {
 });
 const MAPA_TECLAS = { ArrowLeft: 'izq', KeyA: 'izq', ArrowRight: 'der', KeyD: 'der', ArrowUp: 'arriba', KeyW: 'arriba', Space: 'arriba', ArrowDown: 'abajo', KeyS: 'abajo' };
 addEventListener('keydown', e => {
-  const k = MAPA_TECLAS[e.code]; if (!k || !enObra) return;
+  const k = MAPA_TECLAS[e.code]; if (!k || !(enObra || enObby)) return;
   e.preventDefault(); if (k === 'arriba' && !e.repeat) teclas.saltar = true; teclas[k] = true;
 });
 addEventListener('keyup', e => { const k = MAPA_TECLAS[e.code]; if (k) teclas[k] = false; });
@@ -1420,6 +1466,298 @@ function entrarObra() {
   requestAnimationFrame(t => { tAnterior = t; bucleObra(t); });
   if (misionDicha !== E.mision) decirMision();
 }
+
+// ---------- Carrera de letras (obby): saltar por plataformas y juntar las letras del nombre del animal ----------
+// Cada letra tiene su estación: la correcta y otra que no es; la puerta se abre con la correcta. Caer al agua solo regresa a la bandera.
+const lienzoO = $('lienzoObby'), ox = lienzoO.getContext('2d');
+let enObby = false, ob = null, OTS = 50, OW = 0, OH = 0, ocamX = 0, ocamY = 2, ultimoObby = '';
+const jug = { x: 0, y: 2, vx: 0, vy: 0, w: 0.6, h: 1.3, suelo: true, mira: 1, paso: 0, coyote: 0, sobre: null, emote: null };
+const mascotaO = { x: 0, y: 2, dir: 1 };
+const COLORES_O = ['#ef4444', '#3b82f6', '#f59e0b', '#22c55e', '#a855f7', '#ec4899'];
+const LARGO_MAX = [4, 5, 9];   // letras del nombre según el nivel
+function medirObby() {
+  const dpr = Math.min(devicePixelRatio || 1, 2);
+  OW = innerWidth; OH = innerHeight;
+  lienzoO.width = OW * dpr; lienzoO.height = OH * dpr; ox.setTransform(dpr, 0, 0, dpr, 0, 0);
+  OTS = Math.max(30, Math.min(OH / 10, OW / 12));
+}
+addEventListener('resize', () => { if (enObby) medirObby(); });
+const osx = x => (x - ocamX) * OTS, osy = y => OH * 0.62 - (y - ocamY) * OTS;
+
+function generarObby(palabra) {
+  const plats = [], letras = [], puertas = [], estrellas = [], banderas = [];
+  let x = -3, y = 2, n = 0;
+  const plat = (w, extra = {}) => { const p = { x, y, w, col: COLORES_O[n++ % COLORES_O.length], ...extra }; plats.push(p); x += w; return p; };
+  const hueco = g => { estrellas.push({ x: x + g / 2, y: y + 1.5 }); x += g; };
+  const subir = d => { y = Math.max(1, Math.min(7, y + d)); };
+  const saltoMax = [1.7, 2.1, 2.4][E.nivel - 1];
+  plat(7);
+  for (let i = 0; i < palabra.length; i++) {
+    for (let k = 0; k < E.nivel + 1; k++) {   // obstáculos antes de cada letra
+      // Un salto corriendo avanza ~3.5 bloques: las plataformas donde se cae son anchas para no pasarse
+      let tipo = ['salto', 'salto', 'escalones', 'mueve', 'rebote'][azar(5)];
+      if ((tipo === 'escalones' || tipo === 'rebote') && y > 4) tipo = 'salto';
+      if (tipo === 'salto') { const dy = [-1, 0, 1][azar(3)]; hueco(1 + Math.random() * (saltoMax - 1)); subir(dy); plat(3 + azar(2) + (dy < 0 ? 1 : 0)); }
+      else if (tipo === 'escalones') for (let s = 0; s < 3; s++) { hueco(0.9); subir(1); plat(s === 2 ? 3.5 : 1.7); }
+      else if (tipo === 'mueve') {
+        const amp = 1.4; x += 0.5;
+        plats.push({ x: x + amp, x0: x + amp, y, w: 2.2, amp, vel: 1.5, fase: Math.random() * 6, mueve: true, dx: 0, col: '#8b5cf6' });
+        estrellas.push({ x: x + amp + 1.1, y: y + 1.7 });
+        x += 2.2 + amp * 2 + 0.5; plat(3);
+      } else { plat(1.5); plat(1.2, { rebote: true, col: '#ec4899', aplasta: 0 }); hueco(1.2); subir(3); plat(3); }
+    }
+    hueco(1.2); subir([-1, 0][azar(2)]);
+    const s = plat(7, { estacion: true, col: '#e2e8f0' });
+    banderas.push({ x: s.x + 0.8, y, lista: false });
+    const otra = mezclar([...LETRAS].filter(c => c !== palabra[i]))[0], xs = mezclar([2.8, 5]), altos = mezclar([0.9, 2.3]);
+    letras.push({ x: s.x + xs[0], y: y + altos[0], c: palabra[i], i, ok: true, tomada: false, sacude: 0 });
+    letras.push({ x: s.x + xs[1], y: y + altos[1], c: otra, i, ok: false, tomada: false, sacude: 0 });
+    puertas.push({ x: s.x + 7, y, i, abierta: false, alfa: 1 });
+  }
+  hueco(1.4);
+  const meta = plat(9, { meta: true, col: '#facc15' });
+  return { plats, letras, puertas, estrellas, banderas, meta, fin: meta.x + 5, finX: x };
+}
+function entrarObby() {
+  const l = lenguaReto();
+  const cand = ANIMALES.filter(a => sinAcento(a[l][0]).length <= LARGO_MAX[E.nivel - 1] && a.id !== ultimoObby);
+  const a = cand[azar(cand.length)], palabra = sinAcento(a[l][0]).toUpperCase();
+  ultimoObby = a.id;
+  ob = { a, l, palabra, idx: 0, t: 0, activo: true, buffer: 0, agua: 0, pista: -1, gotas: [], textos: [], cp: { x: -1, y: 2 }, ...generarObby(palabra) };
+  Object.assign(jug, { x: -1, y: 2, vx: 0, vy: 0, suelo: true, mira: 1, sobre: null, emote: null });
+  Object.assign(mascotaO, { x: -2, y: 2 });
+  mostrar('obby'); medirObby();
+  ocamX = jug.x - OW / OTS * 0.38; ocamY = jug.y;
+  pintarHud();
+  const yo = ob;
+  let tAnt = 0;
+  const bucle = t => {
+    if (!enObby || ob !== yo) return;   // una sola carrera a la vez
+    const dt = Math.min(0.05, (t - tAnt) / 1000 || 0); tAnt = t;
+    if (ob.activo) pasoObby(dt);
+    dibujarObby(dt);
+    requestAnimationFrame(bucle);
+  };
+  requestAnimationFrame(t => { tAnt = t; bucle(t); });
+  setTimeout(() => ob === yo && decirLetras(true), 300);
+}
+function decirLetras(inicio) {
+  const { l, palabra, idx } = ob, c = palabra[idx], nombre = ob.a[l][0];
+  if (idx >= palabra.length) return;
+  if (inicio) decir([{ l, t: l === 'es' ? `¡${nombre}! Junta las letras. Busca la ${c}.` : `${nombre}! Collect the letters. Find the ${c}.` }]);
+  else decir([{ l, t: l === 'es' ? `¡Busca la ${c}!` : `Find the ${c}!` }]);
+}
+function pintarHud() {
+  $('hudAnimal').textContent = ob.a.emo;
+  $('hudLetras').innerHTML = [...ob.palabra].map((c, i) =>
+    `<span class="casilla${i < ob.idx ? ' ya' : i === ob.idx ? ' sig' : ''}">${i < ob.idx || E.nivel < 3 ? c : '?'}</span>`).join('');
+}
+const flotarO = (t, x, y, col = '#fff') => ob.textos.push({ t, x, y, col, vida: 1 });
+
+function pasoObby(dt) {
+  ob.t += dt;
+  const seg = `⏱ ${Math.floor(ob.t)}`;
+  if ($('hudTiempo').textContent !== seg) $('hudTiempo').textContent = seg;
+  for (const p of ob.plats) if (p.mueve) { const nx = p.x0 + Math.sin(ob.t * p.vel + p.fase) * p.amp; p.dx = nx - p.x; p.x = nx; }
+  if (ob.agua > 0) {   // después del chapuzón, vuelve a la última bandera
+    if ((ob.agua -= dt) <= 0) Object.assign(jug, { x: ob.cp.x, y: ob.cp.y + 0.3, vx: 0, vy: 0 });
+    return;
+  }
+  jug.vx = ((teclas.der ? 1 : 0) - (teclas.izq ? 1 : 0)) * 4.5;
+  if (jug.vx) jug.mira = Math.sign(jug.vx);
+  if (jug.sobre?.mueve) jug.x += jug.sobre.dx;
+  // Salto con margen: vale un instante después de dejar la orilla, o un instante antes de tocar el piso
+  jug.coyote = jug.suelo ? 0.12 : jug.coyote - dt;
+  ob.buffer = teclas.saltar ? 0.15 : ob.buffer - dt; teclas.saltar = false;
+  if (ob.buffer > 0 && jug.coyote > 0) { jug.vy = 9.5; jug.coyote = 0; ob.buffer = 0; jug.suelo = false; tono(520, 0, 0.12, 'sine', 0.08); }
+  jug.vy = Math.max(-15, jug.vy - 25 * dt);
+  // Horizontal: solo las puertas cerradas detienen
+  let nx = jug.x + jug.vx * dt;
+  for (const g of ob.puertas) {
+    if (g.abierta || jug.x + jug.w / 2 > g.x + 0.01 || nx + jug.w / 2 <= g.x) continue;
+    nx = g.x - jug.w / 2;
+    if (!g.toque || ob.t - g.toque > 3) { g.toque = ob.t; decirLetras(false); }
+  }
+  jug.x = Math.max(-4, Math.min(ob.finX - 0.5, nx));
+  // Vertical: las plataformas se pisan desde arriba (se puede saltar a través de ellas)
+  let ny = jug.y + jug.vy * dt;
+  jug.suelo = false; jug.sobre = null;
+  if (jug.vy <= 0) for (const p of ob.plats) {
+    if (jug.x + jug.w / 2 > p.x - 0.05 && jug.x - jug.w / 2 < p.x + p.w + 0.05 && jug.y >= p.y - 0.05 && ny <= p.y) {
+      ny = p.y; jug.vy = 0; jug.suelo = true; jug.sobre = p;
+      if (p.rebote) { jug.vy = 14; jug.suelo = false; p.aplasta = 0.25; [392, 523, 784].forEach((f, k) => tono(f, k * 0.05, 0.15, 'sine', 0.12)); }
+      break;
+    }
+  }
+  jug.y = ny;
+  if (jug.vx && jug.suelo) jug.paso += dt * 12;
+  if (jug.emote && (jug.emote.t += dt) > 1.4) jug.emote = null;
+  if (jug.y < -0.6) caerAgua();
+  recogerObby();
+  moverMascotaO(dt);
+}
+function caerAgua() {
+  ob.agua = 0.8; jug.vy = 0;
+  for (let k = 0; k < 16; k++) ob.gotas.push({ x: jug.x, y: 0.3, vx: (Math.random() - 0.5) * 6, vy: 3 + Math.random() * 5, vida: 0.8 });
+  tono(600, 0, 0.3, 'sine', 0.1); tono(300, 0.05, 0.35, 'sine', 0.1);
+}
+function recogerObby() {
+  const cxj = jug.x, cyj = jug.y + 0.65;
+  for (const b of ob.banderas) if (!b.lista && cxj > b.x) {
+    b.lista = true; ob.cp = { x: b.x, y: b.y };
+    tono(784, 0, 0.15, 'triangle', 0.12); tono(1047, 0.1, 0.2, 'triangle', 0.12);
+    decirLetras(false);
+  }
+  for (const s of ob.estrellas) if (!s.tomada && Math.hypot(s.x - cxj, s.y - cyj) < 0.75) {
+    s.tomada = true; E.estrellas++; ganarXP(2);
+    flotarO('+1 ⭐', s.x, s.y + 0.4, '#fde047'); tono(1319, 0, 0.12, 'sine', 0.12); tono(1760, 0.08, 0.18, 'sine', 0.12);
+  }
+  for (const L of ob.letras) {
+    if (L.tomada || L.i !== ob.idx || Math.hypot(L.x - cxj, L.y - cyj) > 0.8) continue;
+    if (L.ok) { tomarLetra(L); continue; }
+    if (ob.t - (L.aviso ?? -9) < 2.5) continue;
+    L.aviso = ob.t; L.sacude = 0.5; ob.pista = L.i; sfx.casi();   // no pasa nada malo: dice cuál es y cuál busca
+    const c = ob.palabra[ob.idx];
+    decir([{ l: ob.l, t: ob.l === 'es' ? `Esa es la ${L.c}. ¡Busca la ${c}!` : `That is ${L.c}. Find the ${c}!` }]);
+  }
+  if (ob.idx >= ob.palabra.length && cxj > ob.fin - 1 && jug.suelo) ganarObby();
+}
+function tomarLetra(L) {
+  L.tomada = true; ob.idx++; ob.puertas[L.i].abierta = true;
+  const f = [523, 587, 659, 784, 880, 1047, 1175, 1319, 1568][Math.min(L.i, 8)];
+  tono(f, 0, 0.25, 'triangle', 0.15); tono(f * 1.5, 0.1, 0.3, 'triangle', 0.12);
+  flotarO(L.c, L.x, L.y + 0.6, '#22c55e');
+  for (let k = 0; k < 12; k++) ob.gotas.push({ x: L.x, y: L.y, vx: (Math.random() - 0.5) * 6, vy: 2 + Math.random() * 4, vida: 0.7, col: COLORES_O[k % 6] });
+  decir([{ l: ob.l, t: L.c }]);
+  ganarXP(5); evento('letra'); pintarHud();
+  if (ob.idx >= ob.palabra.length) {
+    const yo = ob;
+    setTimeout(() => ob === yo && decir([{ l: yo.l, t: yo.l === 'es' ? `¡${yo.a.es[0]}! Corre al arca.` : `${yo.a.en[0]}! Run to the ark.` }]), 900);
+  }
+}
+function ganarObby() {
+  ob.activo = false;
+  const { a, l, palabra } = ob, seg = Math.max(1, Math.round(ob.t)), antes = E.obby.records[a.id], record = antes && seg < antes;
+  if (!antes || seg < antes) E.obby.records[a.id] = seg;
+  E.obby.hechas++; E.coleccion[a.id] = (E.coleccion[a.id] || 0) + 1;
+  E.madera += MADERA_RESCATE; E.estrellas += 3; guardar();
+  const xp = 60 + (record ? 15 : 0);
+  ganarXP(xp); evento('obby'); evento('rescate');
+  $('finObbyAnimal').textContent = a.emo + a.emo;
+  $('finObbyPalabra').innerHTML = [...palabra].map((c, i) => `<span style="animation-delay:${i * 0.25}s">${c}</span>`).join('');
+  $('finObbyTexto').textContent = T(`¡Rescataste a ${a.g === 'f' ? 'las' : 'los'} ${a.es[1]}!`, `You rescued the ${a.en[1]}!`) + `  ⏱ ${seg} s` + (record ? '  🏆 ' + T('¡Récord!', 'Record!') : '');
+  $('finObbyPremio').textContent = `+3 ⭐   +${MADERA_RESCATE} 🪵   +${xp} XP`;
+  $('bOtraCarrera').textContent = T('🔁 Otra carrera', '🔁 Another run');
+  $('finObby').classList.add('abierta'); sfx.fanfarria();
+  setTimeout(() => decir([{ l, t: [...palabra].join(', ') + (l === 'es' ? '. ¡' : '. ') + a[l][0] + '!' }]), 500);
+}
+function moverMascotaO(dt) {
+  if (!E.mascota) return;
+  const meta = jug.x - jug.mira * 0.9;
+  if (Math.abs(meta - mascotaO.x) > 6) { mascotaO.x = meta; mascotaO.y = jug.y; }
+  const vx = (meta - mascotaO.x) * Math.min(1, dt * 4);
+  if (Math.abs(vx) > 0.002) mascotaO.dir = Math.sign(vx);
+  mascotaO.x += vx; mascotaO.y += (jug.y - mascotaO.y) * Math.min(1, dt * 5);
+}
+
+function dibujarObby(dt) {
+  const g = ox, ahora = performance.now() / 1000;
+  ocamX += (jug.x - OW / OTS * 0.38 - ocamX) * Math.min(1, dt * 5);
+  ocamY += (Math.max(1.5, jug.y) - ocamY) * Math.min(1, dt * 3);
+  // Cielo, montañas lejanas y nubes (se mueven más lento: profundidad)
+  const cielo = g.createLinearGradient(0, 0, 0, OH);
+  cielo.addColorStop(0, '#60b8ff'); cielo.addColorStop(1, '#d6f1ff');
+  g.fillStyle = cielo; g.fillRect(0, 0, OW, OH);
+  const agua = osy(0.3);
+  g.fillStyle = '#a5d8ff';
+  for (let k = -1; k < OW / 220 + 2; k++) {
+    const bx = k * 220 - ((ocamX * OTS * 0.2) % 220 + 220) % 220;
+    g.beginPath(); g.moveTo(bx, agua); g.lineTo(bx + 110, agua - 170); g.lineTo(bx + 220, agua); g.fill();
+  }
+  for (let k = 0; k < 4; k++) {
+    const x = ((k * 330 - ocamX * OTS * 0.4 + ahora * 10) % (OW + 300) + OW + 300) % (OW + 300) - 150;
+    emoji('☁️', x, 120 + k * 50, 56 + k * 8, g);
+  }
+  // Agua
+  g.fillStyle = '#2563eb'; g.fillRect(0, agua, OW, OH - agua);
+  g.fillStyle = '#60a5fa';
+  for (let x = -((ocamX * OTS) % 40 + 40) % 40 - 40; x < OW + 40; x += 40) { g.beginPath(); g.arc(x + Math.sin(ahora * 2 + x) * 3, agua, 14, Math.PI, 0); g.fill(); }
+  // Plataformas
+  const grueso = OTS * 0.6;
+  for (const p of ob.plats) {
+    const x = osx(p.x), w = p.w * OTS;
+    if (x > OW + 10 || x + w < -10) continue;
+    let y = osy(p.y);
+    if (p.rebote) { p.aplasta = Math.max(0, p.aplasta - dt); y += p.aplasta * OTS * 0.6; }
+    g.fillStyle = p.col; g.beginPath(); g.roundRect?.(x, y, w, grueso, 8); g.fill();
+    g.fillStyle = '#ffffff55'; g.fillRect(x + 4, y + 3, w - 8, grueso * 0.22);
+    if (p.estacion) { g.strokeStyle = '#94a3b8'; g.lineWidth = 2; g.strokeRect(x + 1, y + 1, w - 2, grueso - 2); }
+    g.fillStyle = '#ffffff'; g.font = `900 ${OTS * 0.35}px system-ui, sans-serif`; g.textAlign = 'center'; g.textBaseline = 'middle';
+    if (p.mueve) g.fillText('◀ ▶', x + w / 2, y + grueso / 2);
+    if (p.rebote) g.fillText('⏫', x + w / 2, y + grueso / 2);
+  }
+  // Banderas (rojas hasta que pasas: luego verdes)
+  for (const b of ob.banderas) {
+    const x = osx(b.x), y = osy(b.y);
+    g.strokeStyle = '#475569'; g.lineWidth = 3; g.beginPath(); g.moveTo(x, y); g.lineTo(x, y - OTS * 2); g.stroke();
+    g.fillStyle = b.lista ? '#22c55e' : '#ef4444';
+    g.beginPath(); g.moveTo(x, y - OTS * 2); g.lineTo(x + OTS * 0.8, y - OTS * 1.75); g.lineTo(x, y - OTS * 1.5); g.fill();
+  }
+  // Puertas de cristal con la letra que abre cada una
+  for (const p of ob.puertas) {
+    p.alfa = p.abierta ? Math.max(0, p.alfa - dt * 2) : 1;
+    if (!p.alfa) continue;
+    const x = osx(p.x), y = osy(p.y);
+    g.globalAlpha = p.alfa * 0.5; g.fillStyle = '#67e8f9'; g.fillRect(x - OTS * 0.2, 0, OTS * 0.4, y);
+    g.globalAlpha = p.alfa;
+    g.fillStyle = '#0e7490'; g.font = `900 ${OTS * 0.7}px system-ui, sans-serif`; g.textAlign = 'center'; g.textBaseline = 'middle';
+    g.fillText(E.nivel < 3 || p.i < ob.idx ? ob.palabra[p.i] : '?', x, y - OTS * 1.6);
+    emoji('🔒', x, y - OTS * 2.5, OTS * 0.5, g);
+    g.globalAlpha = 1;
+  }
+  // Estrellas y letras
+  for (const s of ob.estrellas) if (!s.tomada) emoji('⭐', osx(s.x), osy(s.y + Math.sin(ahora * 3 + s.x) * 0.1), OTS * 0.5, g);
+  const pulso = (Math.sin(ahora * 6) + 1) / 2;
+  for (const L of ob.letras) {
+    if (L.tomada) continue;
+    L.sacude = Math.max(0, L.sacude - dt);
+    const tam = OTS * 0.95, x = osx(L.x) + Math.sin(L.sacude * 40) * L.sacude * OTS * 0.4, y = osy(L.y + Math.sin(ahora * 2.5 + L.x) * 0.08);
+    const brilla = L.ok && ob.pista === L.i && L.i === ob.idx;   // pista después de tocar la que no era
+    g.fillStyle = brilla ? `rgb(253, ${200 + pulso * 40}, 71)` : '#ffffff';
+    g.strokeStyle = '#1e40af'; g.lineWidth = 4;
+    g.beginPath(); g.roundRect?.(x - tam / 2, y - tam / 2, tam, tam, 12); g.fill(); g.stroke();
+    g.fillStyle = '#1e3a8a'; g.font = `900 ${tam * 0.7}px system-ui, sans-serif`; g.textAlign = 'center'; g.textBaseline = 'middle';
+    g.fillText(L.c, x, y + tam * 0.04);
+  }
+  // Meta: el arca y la pareja de animales esperando
+  const m = ob.meta;
+  emoji('🏁', osx(ob.fin - 1), osy(m.y + 0.6), OTS * 0.8, g);
+  emoji('🚢', osx(ob.fin + 2), osy(m.y + 1.2), OTS * 2.6, g);
+  emoji(ob.a.emo + ob.a.emo, osx(ob.fin + 0.3), osy(m.y + 0.5 + Math.abs(Math.sin(ahora * 4)) * 0.2), OTS * 0.8, g);
+  // Gotas y chispas
+  ob.gotas = ob.gotas.filter(d => (d.vida -= dt) > 0);
+  for (const d of ob.gotas) { d.x += d.vx * dt; d.y += d.vy * dt; d.vy -= 12 * dt; g.fillStyle = d.col || '#bfdbfe'; g.beginPath(); g.arc(osx(d.x), osy(d.y), 4, 0, 7); g.fill(); }
+  // Monito y mascota
+  if (!ob.agua) pintarMonito(g, osx(jug.x), osy(jug.y), jug.h * OTS, jug);
+  if (E.mascota) {
+    g.save(); g.translate(osx(mascotaO.x), osy(mascotaO.y + 0.35 + Math.abs(Math.sin(ahora * 8)) * 0.1));
+    if (mascotaO.dir > 0) g.scale(-1, 1);
+    emoji(E.mascota, 0, 0, OTS * 0.6, g); g.restore();
+  }
+  // Textos que suben
+  ob.textos = ob.textos.filter(t => (t.vida -= dt * 0.8) > 0);
+  g.textAlign = 'center'; g.textBaseline = 'middle';
+  for (const t of ob.textos) {
+    t.y += dt * 1.2; g.globalAlpha = Math.min(1, t.vida * 2);
+    g.font = `900 ${Math.max(20, OTS * 0.6)}px ${EMOJI}`; g.lineWidth = 4; g.strokeStyle = '#0006';
+    g.strokeText(t.t, osx(t.x), osy(t.y)); g.fillStyle = t.col; g.fillText(t.t, osx(t.x), osy(t.y));
+  }
+  g.globalAlpha = 1;
+}
+$('bObby').onclick = () => entrarObby();
+$('hudOir').onclick = () => ob && (ob.idx < ob.palabra.length ? decirLetras(false) : decir([{ l: ob.l, t: ob.a[ob.l][0] }]));
+$('bOtraCarrera').onclick = () => { $('finObby').classList.remove('abierta'); entrarObby(); };
+$('bObbyLobby').onclick = () => { $('finObby').classList.remove('abierta'); pintarInicio(); mostrar('inicio'); };
 
 // ---------- Ajustes para adultos (mantener 🔒 3 segundos) ----------
 const bCand = $('candado');
@@ -1462,7 +1800,7 @@ $('bReiniciar').onclick = () => {
   arbustos.forEach(b => b.el.remove()); arbustos = [];
   guardar(); $('panel').classList.remove('abierta'); pintarInicio(); mostrar('inicio');
 };
-function cerrarCapas() { ['reto', 'festejo', 'premio'].forEach(id => $(id).classList.remove('abierta')); reto = null; ocupado = false; }
+function cerrarCapas() { ['reto', 'festejo', 'premio', 'finObby'].forEach(id => $(id).classList.remove('abierta')); reto = null; ocupado = false; }
 
 pintarInicio();
 </script>

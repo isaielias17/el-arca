@@ -9,6 +9,14 @@ Como en los juegos grandes, pero sin violencia y sin compras: tu personaje en su
 - **💃 Bailes:** toca a tu personaje o los botones de baile; en el arca, el botón 💃 hace bailar al monito.
 - **🐾 Mascota:** te sigue por el prado y por la obra del arca. Tócala para acariciarla.
 
+## 🏃 Carrera de letras (obby)
+Una carrera de plataformas sobre el agua para rescatar a un animal juntando las letras de su nombre (en español o en inglés): "PATO", "OSO", "CABALLO"…
+- Saltos, escaleras, plataformas que se mueven ◀ ▶ y trampolines ⏫. Estrellas ⭐ para atrapar.
+- Cada letra tiene su estación con bandera 🚩: hay dos letras y una puerta de cristal que solo se abre con la correcta. Si tocas la otra, el juego te dice cuál es y cuál buscas, y la correcta se ilumina.
+- Caer al agua no hace perder: solo regresas a la última bandera.
+- Al llegar al arca 🚢 el animal queda rescatado y se deletrea su nombre. Tiempo ⏱ y récord 🏆 por animal.
+- Nivel fácil: nombres de hasta 4 letras; medio: 5; difícil: cualquier largo, más obstáculos y la letra que sigue no se muestra (solo se escucha).
+
 ## Cómo se juega
 1. **🧭 Explora:** camina con tu personaje por el prado y toca los árboles: detrás se esconden animalitos.
 2. **🦁 Rescata:** para rescatar a cada pareja hay un reto corto:
