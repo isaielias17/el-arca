@@ -43,6 +43,14 @@ Una carrera de plataformas sobre el agua para rescatar a un animal juntando las 
    4. El techo y la ventana arriba.
    5. Brea por dentro y por fuera.
    Al terminar: "Noé hizo todo lo que Dios le mandó", llueve, sale el arcoíris 🌈 y se cuenta la historia. 🔭 muestra el arca completa.
+
+   **Y la historia sigue** con 6 misiones nuevas, dentro del arca y después del diluvio:
+   1. **Los corrales** (Génesis 6:19-20): camina a cada lugar marcado y haz un corral para cada pareja (5 🪵 cada uno).
+   2. **La comida** (Génesis 6:21): toma la comida de afuera y llévala, una por una, a la canasta 🧺 del arca.
+   3. **Dar de comer** (Génesis 7:1): cada animal con hambre pide un número; toca la fruta para darle justo esas (con puntitos de ayuda en fácil y medio).
+   4. **La paloma** (Génesis 8:6-12): sube a la ventana de arriba y suelta la paloma 🕊️ tres veces (regresa, regresa con una hoja de olivo 🌿, ya no regresa).
+   5. **¡A tierra!** (Génesis 8:15-19): saca a cada pareja del arca, de dos en dos; se quedan paseando afuera.
+   6. **La promesa** (Génesis 9:13-16): sal del arca y mira el arcoíris: Dios cumple sus promesas.
 4. **🏆 Premios:** las estrellas ⭐ desbloquean caras y gorros para tu personaje. En "Mis animales" ves los que has rescatado.
 
 Cada arca nueva sube de nivel: más opciones, números más grandes y letras sin resaltar.

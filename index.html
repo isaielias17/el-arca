@@ -405,6 +405,17 @@
   <button class="grande" id="festejoSeguir">👍</button>
 </div></div>
 
+<div id="comer" class="capa"><div class="tarjeta">
+  <button class="chip oir" id="comerOir">🔊</button>
+  <div class="animal-grande" id="comerAnimal"></div>
+  <div class="palabra" id="comerNumero"></div>
+  <div class="contables" id="comerPlato" style="min-height:70px"></div>
+  <div class="fila-botones">
+    <button class="opcion" id="comerFruta"></button>
+    <button class="grande" id="comerListo">✅</button>
+  </div>
+</div></div>
+
 <div id="finObby" class="capa"><div class="tarjeta">
   <div class="pareja" id="finObbyAnimal"></div>
   <div class="palabra" id="finObbyPalabra"></div>
@@ -495,7 +506,8 @@ const LETRAS = 'ABCDEFGHIJLMNOPRSTUVZ';   // sin K, Ñ, Q, W, X, Y para no confu
 // ---------- Estado guardado (si el navegador lo permite) ----------
 const DEF = { estrellas: 0, coleccion: {}, madera: 30, mision: 0, obra: '', nivel: 1, arcas: 0,
               avatar: { cara: '👦', gorro: '🧢', color: '#4dabf7' }, nombre: '', idioma: 'ambos', bienvenida: false,
-              xp: 0, reclamado: 1, mascota: '', estela: '', baileFav: 'saludo', obby: { hechas: 0, records: {} }, isla: { celdas: {}, reto: 0 }, diluvio: { jugadas: 0, mejor: 0 }, diarias: { fecha: '', ids: [], prog: [], cofre: false } };
+              xp: 0, reclamado: 1, mascota: '', estela: '', baileFav: 'saludo', obby: { hechas: 0, records: {} }, isla: { celdas: {}, reto: 0 }, diluvio: { jugadas: 0, mejor: 0 },
+              post: { i: 0, corrales: [], comida: 0, comio: [], paloma: 0, fuera: [], anim: [] }, diarias: { fecha: '', ids: [], prog: [], cofre: false } };
 let E;
 try { E = JSON.parse(localStorage.getItem('arca.estado')) || {}; } catch { E = {}; }
 // Versión anterior: las tablas de 10 se convierten en madera para el arca grande
@@ -692,7 +704,9 @@ function pintarInicio() {
   $('titulo').textContent = nombreNino() ? T(`El Arca de ${nombreNino()}`, `${nombreNino()}'s Ark`) : T('El Arca', 'The Ark');
   const terminada = E.mision >= MISIONES.length, puedeConstruir = !terminada && (E.madera > 0 || MISIONES[E.mision].brea);
   $('arca').innerHTML = svgArca(terminada ? TABLAS_ARCA : Math.floor(avanceTotal() * TABLAS_ARCA), terminada, false);
-  $('msgArca').textContent = terminada ? T('🌈 ¡Terminada, como Dios le dijo a Noé!', '🌈 Finished, just as God told Noah!')
+  const post = terminada && POST[E.post.i];
+  $('msgArca').textContent = post ? `✨ ${T('Misión nueva', 'New mission')}: ${T(...post.tit)}`
+    : terminada ? T('🌈 ¡Historia completa! Dios cumple sus promesas.', '🌈 Story complete! God keeps his promises.')
     : `${Math.round(avanceTotal() * 100)} %  ·  🪵 ${E.madera}` + (puedeConstruir ? '' : '  ·  ' + T('rescata para tener madera', 'rescue to get wood'));
   const total = ANIMALES.filter(a => E.coleccion[a.id]).length;
   $('msgRescate').textContent = `🐾 ${total} / ${ANIMALES.length}   ·   +${MADERA_RESCATE} 🪵`;
@@ -706,7 +720,7 @@ function pintarInicio() {
   $('msgObby').textContent = T('🔤 Salta y junta las letras', '🔤 Jump and collect the letters') + (E.obby.hechas ? `  ·  🏁 ${E.obby.hechas}` : '');
   document.querySelectorAll('.modo .jugar').forEach(j => j.textContent = T('▶ Jugar', '▶ Play'));
   $('bJugar').querySelector('.jugar').classList.toggle('pulsa', !puedeConstruir && !terminada);
-  $('bConstruir').querySelector('.jugar').classList.toggle('pulsa', puedeConstruir);
+  $('bConstruir').querySelector('.jugar').classList.toggle('pulsa', puedeConstruir || !!post);
   $('bPersonaje').querySelector('.lbl').textContent = T('Mi personaje', 'My character');
   $('bAlbum').querySelector('.lbl').textContent = T('Mis animales', 'My animals');
   pintarLobby();
@@ -1006,6 +1020,12 @@ function finalArca() {
   setTimeout(() => { f.classList.add('sol'); sfx.fanfarria(); di(es, en); $('bNuevaArca').style.visibility = ''; }, 3000);
 }
 $('bNuevaArca').onclick = () => {
+  if ($('final').dataset.modo === 'promesa') {   // fin de toda la historia de Noé
+    $('final').dataset.modo = ''; $('final').classList.remove('abierta', 'sol');
+    E.estrellas += 10; guardar(); ganarXP(150);
+    toast(T('🏆 ¡Historia completa! +10 ⭐ +150 XP', '🏆 Story complete! +10 ⭐ +150 XP'));
+    pintarInicio(); mostrar('inicio'); return;
+  }
   E.arcas++; E.estrellas += 5; E.nivel = Math.min(3, E.nivel + 1); guardar();
   $('final').classList.remove('abierta', 'sol');
   toast(T('+5 ⭐ +100 XP ¡Retos más difíciles!', '+5 ⭐ +100 XP Harder challenges!'));
@@ -1147,11 +1167,12 @@ function solidosEn(x, y, w, h) {
   }
   return res;
 }
+let escX = 0;
 function escaleraAqui() {   // devuelve el tope de la escalera si el monito está sobre una
   let tope = null;
   for (const p of PLANO) {
     if (!p.hecho || p.tipo !== 'escalera') continue;
-    if (Math.abs(MARGEN + p.c + 0.5 - mono.x) < 0.45 && mono.y < p.r + 1 && mono.y + mono.h > p.r) tope = Math.max(tope ?? 0, p.r + 1);
+    if (Math.abs(MARGEN + p.c + 0.5 - mono.x) < 0.45 && mono.y < p.r + 1 && mono.y + mono.h > p.r) { tope = Math.max(tope ?? 0, p.r + 1); escX = MARGEN + p.c + 0.5; }
   }
   return tope;
 }
@@ -1160,8 +1181,11 @@ function moverMono(dt) {
   if (mono.vx) mono.mira = Math.sign(mono.vx);
   const tope = escaleraAqui();
   if (tope !== null && (teclas.arriba || teclas.abajo)) mono.trepando = true;
-  if (tope === null) mono.trepando = false;
-  if (mono.trepando) mono.vy = teclas.arriba ? 3 : teclas.abajo ? -3 : 0;
+  if (tope === null || (mono.vx && !teclas.arriba && !teclas.abajo)) mono.trepando = false;   // ◀ ▶ en la escalera: se suelta y baja al piso
+  if (mono.trepando) {
+    mono.vy = teclas.arriba ? 3 : teclas.abajo ? -3 : 0;
+    if (!mono.vx) mono.x += (escX - mono.x) * Math.min(1, dt * 12);   // al centro de la escalera, para no pegar la cabeza con el piso de arriba
+  }
   else {
     mono.vy -= 25 * dt;
     if (teclas.saltar && mono.suelo) { mono.vy = 9; tono(520, 0, 0.12, 'sine', 0.08); }
@@ -1304,11 +1328,12 @@ function dibujarObra(dt) {
   for (const a of astillas) { a.x += a.vx * dt; a.y += a.vy * dt; a.vy -= 12 * dt; cx.fillStyle = a.col; cx.fillRect(sx(a.x) - 3, sy(a.y) - 3, 6, 6); }
   // Premios que flotan y animales que pasean
   for (const pr of premios) emoji(pr.tipo === 'estrella' ? '⭐' : '🪵', sx(pr.x), sy(pr.y + Math.sin(ahora * 3 + pr.fase) * 0.12), TS * 0.55);
-  for (const p of paseantes) {
+  if (!enDiluvioPost()) for (const p of paseantes) {
     cx.save(); cx.translate(sx(p.x), sy(0.45 + Math.sin(p.salto * Math.PI) * 0.8 + Math.abs(Math.sin(ahora * 6 + p.x)) * 0.05));
     if (p.dir > 0) cx.scale(-1, 1);   // los emojis de animales miran a la izquierda
     emoji(p.a.emo, 0, 0, TS * 0.8); cx.restore();
   }
+  if (E.mision >= MISIONES.length) dibujarPost(ahora, pulso);
   dibujarEstela();
   dibujarMono();
   dibujarMascota(ahora);
@@ -1330,6 +1355,7 @@ function bucleObra(t) {
   moverMono(dt); autoConstruir(dt); sembrarPremios(dt); recogerPremios(); moverPaseantes(dt);
   if (mono.emote && (mono.emote.t += dt) > 1.4) mono.emote = null;
   moverMascota(dt); moverEstela(dt);
+  if (E.mision >= MISIONES.length) pasoPost(dt);
   dibujarObra(dt);
   requestAnimationFrame(bucleObra);
 }
@@ -1465,7 +1491,8 @@ function prepararPaseantes() {   // los animales rescatados esperan y caminan ju
 function moverPaseantes(dt) {
   for (const p of paseantes) {
     p.x += p.dir * 0.6 * dt;
-    if (p.x < MARGEN + COLS + 1 || p.x > MUNDO_W - 0.6) p.dir *= -1;
+    const [a, b] = p.libre ? [0.6, MARGEN - 1.2] : [MARGEN + COLS + 1, MUNDO_W - 0.6];   // los que ya bajaron del arca pasean a la izquierda
+    if ((p.x < a && p.dir < 0) || (p.x > b && p.dir > 0)) p.dir *= -1;
     if (Math.random() < dt * 0.15) p.dir *= -1;
     p.salto = Math.max(0, p.salto - dt * 2);
   }
@@ -1493,10 +1520,15 @@ function completarMision() {
   if (E.mision >= MISIONES.length) { setTimeout(finalArca, 1500); return; }
   setTimeout(decirMision, 1600);
 }
-function decirMision() { const m = MISIONES[E.mision]; if (m) { misionDicha = E.mision; di(...m.corto); } }
+function decirMision() {
+  const m = MISIONES[E.mision] || POST[E.post.i];
+  misionDicha = E.mision + E.post.i;
+  if (m) di(...m.corto);
+}
 function pintarMision() {
   const m = MISIONES[E.mision], tarjeta = $('mision');
   barra();
+  if (!m && POST[E.post.i]) { pintarPost(); return; }
   if (!m) {
     tarjeta.querySelector('.ref').textContent = FIN_OBRA.ref;
     tarjeta.querySelector('.tit').textContent = T('🌈 ¡Arca terminada!', '🌈 Ark finished!');
@@ -1537,13 +1569,223 @@ addEventListener('keyup', e => { const k = MAPA_TECLAS[e.code]; if (k) teclas[k]
 $('bVista').onclick = () => { vista = !vista; $('bVista').classList.toggle('on', vista); medirObra(); };
 $('bBaile').onclick = () => bailar(bailesMios().includes(E.baileFav) ? E.baileFav : 'saludo', true);
 $('bIrRescatar').onclick =() => { $('bIrRescatar').classList.remove('pulsa'); entrarMundo(); };
-$('misionOir').onclick = () => { const m = MISIONES[E.mision]; m ? di(m.es, m.en) : di(FIN_OBRA.es, FIN_OBRA.en); };
+$('misionOir').onclick = () => { const m = MISIONES[E.mision] || POST[E.post.i]; m ? di(m.es, m.en) : di(PROMESA.es, PROMESA.en); };
 
 function entrarObra() {
   mostrar('obra'); pintarMision(); medirObra(); prepararPaseantes();
   camX = vista ? MARGEN - 1 : Math.max(0, mono.x - W2 / TS / 2);
   requestAnimationFrame(t => { tAnterior = t; bucleObra(t); });
-  if (misionDicha !== E.mision) decirMision();
+  if (misionDicha !== E.mision + E.post.i) decirMision();
+}
+
+// ---------- Después de terminar el arca: dentro del arca y después del diluvio (Génesis 6:19 – 9:17) ----------
+const POST = [
+  { ref: 'Génesis 6:19-20', tit: ['Los corrales', 'The animal pens'],
+    corto: ['Haz un corral para cada pareja de animales.', 'Build a pen for each pair of animals.'],
+    es: 'Dios le dijo a Noé: «Mete en el arca dos de cada animal.» Camina a cada lugar marcado y haz un corral. Cada corral usa 5 de madera.',
+    en: 'God told Noah: “Bring two of every animal into the ark.” Walk to each marked place and build a pen. Each pen uses 5 wood.' },
+  { ref: 'Génesis 6:21', tit: ['La comida', 'The food'],
+    corto: ['Guarda comida en el arca. ¡Una por una!', 'Store food in the ark. One at a time!'],
+    es: 'Dios le dijo a Noé: «Junta comida para ti y para los animales.» Toma la comida de afuera y llévala a la canasta del arca.',
+    en: 'God told Noah: “Gather food for you and for the animals.” Pick up the food outside and take it to the basket in the ark.' },
+  { ref: 'Génesis 7:1', tit: ['Dar de comer', 'Feeding time'],
+    corto: ['¡Los animales tienen hambre! Dales de comer.', 'The animals are hungry! Feed them.'],
+    es: 'Noé cuidaba a los animales todos los días. Ve a los corrales que tienen hambre y dale a cada animal las que pide.',
+    en: 'Noah took care of the animals every day. Go to the hungry pens and give each animal as many as it asks for.' },
+  { ref: 'Génesis 8:6-12', tit: ['La paloma', 'The dove'],
+    corto: ['Sube a la ventana de arriba y suelta la paloma.', 'Climb to the top window and let the dove out.'],
+    es: 'Llovió mucho. Después, Noé abrió la ventana y soltó una paloma para ver si ya había tierra seca. Sube a la ventana de arriba.',
+    en: 'It rained a lot. Then Noah opened the window and sent out a dove to see if the land was dry. Climb to the top window.' },
+  { ref: 'Génesis 8:15-19', tit: ['¡A tierra!', 'Back to land!'],
+    corto: ['¡Ya hay tierra seca! Saca a los animales de dos en dos.', 'The land is dry! Take the animals out two by two.'],
+    es: 'Dios le dijo a Noé: «Sal del arca con los animales.» Ve a cada corral y lleva a la pareja afuera, por la puerta.',
+    en: 'God told Noah: “Come out of the ark with the animals.” Go to each pen and lead the pair outside, through the door.' },
+  { ref: 'Génesis 9:13', tit: ['La promesa', 'The promise'],
+    corto: ['Sal del arca y mira el cielo.', 'Go out of the ark and look at the sky.'],
+    es: 'Sal del arca por la puerta y mira el cielo: Dios tiene algo especial para ti.', en: 'Go out through the door and look at the sky: God has something special for you.' },
+];
+const PROMESA = { ref: 'Génesis 9:13-16',
+  es: 'Dios puso el arcoíris en las nubes y dijo: «Esta es la señal de mi promesa: nunca más habrá un diluvio así.» Cada vez que veas un arcoíris, acuérdate: Dios cumple sus promesas',
+  en: 'God put the rainbow in the clouds and said: “This is the sign of my promise: never again will there be a flood like that.” Every time you see a rainbow, remember: God keeps his promises' };
+const CORRALES = [[12, 0], [20, 0], [10, 2], [18, 2], [46, 4], [40, 4]];   // columna y fila del piso de cada corral
+const COMIDAS = [['🍎', 1.5], ['🌽', 3], ['🥕', 4.5], ['🍞', 6], ['🍇', 7.5], ['🥬', 2.3]], BODEGA = MARGEN + 3;
+const HAMBRE = [0, 3, 5, 1];   // los corrales que piden comida
+const VENTANA = [MARGEN + 25, MARGEN + 35];
+const FRUTA = { conejo: '🥕', caballo: '🥕', mono: '🍌', raton: '🧀', vaca: '🌾', oveja: '🌾', gallina: '🌽', pato: '🌽', koala: '🌿', jirafa: '🌿', elefante: '🍉', leon: '🍉', tigre: '🍉', oso: '🍯', panda: '🎋' };
+let carga = '', paloma = null, palomaEspera = 0, sigue = [], histPost = [], tComer = 0;
+const enDiluvioPost = () => E.mision >= MISIONES.length && E.post.i === 3;
+const animalCorral = i => ANIMALES.find(a => a.id === E.post.anim[i]) || ANIMALES[i];
+const posCorral = i => ({ x: MARGEN + CORRALES[i][0] + 0.5, y: CORRALES[i][1] + 0.2 });
+const cercaDe = (x, y, rx = 1.2) => Math.abs(mono.x - x) < rx && Math.abs(mono.y - y) < 0.6;
+function avancePost() {
+  const p = E.post;
+  return [[p.corrales.filter(Boolean).length, 6], [p.comida, COMIDAS.length], [p.comio.length, HAMBRE.length], [p.paloma, 3], [p.fuera.filter(Boolean).length, 6], [0, 1]][p.i] || [1, 1];
+}
+function pintarPost() {
+  const m = POST[E.post.i], [h, t] = avancePost(), tarjeta = $('mision');
+  tarjeta.querySelector('.ref').textContent = `📜 ${m.ref} · ✨ ${T('Misión', 'Mission')} ${E.post.i + 1}/${POST.length}`;
+  tarjeta.querySelector('.tit').textContent = T(...m.tit);
+  tarjeta.querySelector('.barraAv span').style.width = (h / t * 100) + '%';
+  tarjeta.querySelector('.cuenta').textContent = t > 1 ? `${h} / ${t}` + (E.post.i === 0 ? `  ·  🪵 ${E.madera}` : '') + (carga ? `  ·  ${carga}` : '') : '🌈';
+}
+function siguientePost() {
+  const m = POST[E.post.i];
+  E.post.i++; E.estrellas += 5; guardar(); ganarXP(50); sfx.fanfarria();
+  toast(T(`✅ ¡${m.tit[0]}: listo! +5 ⭐ +50 XP`, `✅ ${m.tit[1]}: done! +5 ⭐ +50 XP`));
+  for (let k = 0; k < 20; k++) astillas.push({ x: mono.x, y: mono.y + 1, vx: (Math.random() - 0.5) * 8, vy: 3 + Math.random() * 5, vida: 0.9, col: ['#fde047', '#f472b6', '#60a5fa', '#4ade80'][k % 4] });
+  if (E.post.i === 3) { paseantes = []; }
+  pintarMision();
+  setTimeout(() => enObra && decirMision(), 1800);
+}
+function pasoPost(dt) {
+  const p = E.post, m = POST[p.i];
+  if (!m) return;
+  if (!p.anim.length) { p.anim = [...ANIMALES.filter(a => E.coleccion[a.id]), ...ANIMALES].map(a => a.id).filter((v, k, arr) => arr.indexOf(v) === k).slice(0, 6); guardar(); }
+  if (p.i === 0) CORRALES.forEach((_, i) => {   // 1. corrales: caminar al lugar marcado
+    const c = posCorral(i);
+    if (p.corrales[i] || !cercaDe(c.x, c.y)) return;
+    if (E.madera < 5) { sinMadera(); return; }
+    E.madera -= 5; p.corrales[i] = true; guardar(); sfx.martillo(); sacudida = 0.2;
+    for (let k = 0; k < 10; k++) astillas.push({ x: c.x, y: c.y + 0.5, vx: (Math.random() - 0.5) * 5, vy: 2 + Math.random() * 4, vida: 0.6, col: ['#c08a5a', '#fcd34d'][k % 2] });
+    const a = animalCorral(i); flotar(a.emo + a.emo, c.x, c.y + 1.5); di(a.es[1], a.en[1]);
+    pintarPost(); if (p.corrales.filter(Boolean).length === 6) siguientePost();
+  });
+  else if (p.i === 1) {   // 2. comida: tomar una afuera y llevarla a la canasta
+    const quedan = COMIDAS.length - p.comida - (carga ? 1 : 0);
+    if (!carga) COMIDAS.slice(0, quedan).forEach(([emo, x]) => { if (!carga && cercaDe(x, 0, 0.8)) { carga = emo; sfx.pop(); pintarPost(); } });
+    if (carga && cercaDe(BODEGA, 0.2, 1.3)) {
+      carga = ''; p.comida++; guardar();
+      tono([523, 587, 659, 784, 880, 1047][p.comida - 1] || 1047, 0, 0.25, 'triangle', 0.14);
+      flotar(String(p.comida), BODEGA, 1.6, '#22c55e'); decir([{ l: lenguaReto(), t: String(p.comida) }]);
+      pintarPost(); if (p.comida >= COMIDAS.length) siguientePost();
+    }
+  } else if (p.i === 2) {   // 3. dar de comer: acercarse a un corral con hambre
+    if ((tComer -= dt) > 0 || $('comer').classList.contains('abierta')) return;
+    for (const i of HAMBRE) { const c = posCorral(i); if (!p.comio.includes(i) && cercaDe(c.x, c.y)) { abrirComer(i); break; } }
+  } else if (p.i === 3) {   // 4. la paloma: tres vuelos desde la ventana de arriba
+    if (paloma) {
+      paloma.t += dt;
+      const dura = paloma.n === 3 ? 2.6 : 5;
+      if (paloma.t >= dura) {
+        p.paloma = paloma.n; guardar(); paloma = null; palomaEspera = 1.5; pintarPost();
+        const [es, en] = [['La paloma regresó: todavía hay mucha agua.', 'The dove came back: there is still a lot of water.'],
+                          ['¡La paloma regresó con una hoja de olivo!', 'The dove came back with an olive leaf!'],
+                          ['¡La paloma ya no regresó! Hay tierra seca.', 'The dove did not come back! The land is dry.']][p.paloma - 1];
+        di(es, en); if (p.paloma >= 3) setTimeout(siguientePost, 2500);
+      }
+    } else if ((palomaEspera -= dt) <= 0 && p.paloma < 3 && mono.y > 4 && mono.x > VENTANA[0] && mono.x < VENTANA[1]) {
+      paloma = { t: 0, n: p.paloma + 1 }; tono(1175, 0, 0.2, 'sine', 0.1); tono(1568, 0.15, 0.25, 'sine', 0.1);
+      decir([{ l: lenguaReto(), t: String(paloma.n) }]);
+    }
+  } else if (p.i === 4) {   // 5. ¡a tierra!: la pareja sigue al monito hasta afuera
+    histPost.push({ x: mono.x, y: mono.y }); if (histPost.length > 300) histPost.shift();
+    if (!sigue.length) CORRALES.forEach((_, i) => {
+      const c = posCorral(i);
+      if (!sigue.length && !p.fuera[i] && cercaDe(c.x, c.y)) { const a = animalCorral(i); sigue = [{ i, a, x: c.x - 0.3, y: c.y }, { i, a, x: c.x + 0.3, y: c.y }]; sfx.pop(); di(a.es[1], a.en[1]); }
+    });
+    sigue.forEach((s, k) => { const h = histPost[Math.max(0, histPost.length - 1 - (k + 1) * 14)]; s.x += (h.x - s.x) * Math.min(1, dt * 10); s.y += (h.y - s.y) * Math.min(1, dt * 10); });
+    if (sigue.length && mono.x < MARGEN - 1.5) {
+      const { i, a } = sigue[0]; p.fuera[i] = true; guardar(); sigue = [];
+      paseantes.push({ a, x: Math.max(1, mono.x - 1), dir: -1, salto: 1, libre: true }, { a, x: Math.max(1, mono.x - 2), dir: -1, salto: 1, libre: true });
+      sfx.bien(); di(`¡Adiós, ${a.es[1]}!`, `Bye, ${a.en[1]}!`);
+      pintarPost(); if (p.fuera.filter(Boolean).length === 6) siguientePost();
+    }
+  } else if (p.i === 5 && mono.x < MARGEN - 1.5) finalPromesa();   // 6. la promesa
+}
+function dibujarPost(ahora, pulso) {
+  const p = E.post;
+  // Corrales (cerca de madera con su pareja)
+  CORRALES.forEach((_, i) => {
+    const c = posCorral(i), x = sx(c.x - 0.9), y = sy(c.y + 0.8), w = 1.8 * TS, h = 0.8 * TS;
+    if (!p.corrales[i]) {
+      if (p.i !== 0) return;
+      cx.setLineDash([5, 4]); cx.lineWidth = 2; cx.strokeStyle = '#fff'; cx.fillStyle = `rgba(255,255,255,${0.15 + 0.2 * pulso})`;
+      cx.fillRect(x, y, w, h); cx.strokeRect(x, y, w, h); cx.setLineDash([]); emoji('🔨', sx(c.x), y - TS * 0.3, TS * 0.5); return;
+    }
+    if (!p.fuera[i] && !sigue.some(s => s.i === i)) { const a = animalCorral(i); emoji(a.emo, sx(c.x - 0.4), sy(c.y + 0.4), TS * 0.6); emoji(a.emo, sx(c.x + 0.4), sy(c.y + 0.4), TS * 0.6); }
+    cx.strokeStyle = '#7c4a21'; cx.lineWidth = Math.max(2, TS * 0.07); cx.beginPath();
+    for (let k = 0; k <= 4; k++) { cx.moveTo(x + w * k / 4, y + h); cx.lineTo(x + w * k / 4, y + h * 0.3); }
+    cx.moveTo(x, y + h * 0.45); cx.lineTo(x + w, y + h * 0.45); cx.moveTo(x, y + h * 0.75); cx.lineTo(x + w, y + h * 0.75); cx.stroke();
+    if (p.i === 2 && HAMBRE.includes(i) && !p.comio.includes(i)) emoji('💭' + (FRUTA[animalCorral(i).id] || '🍎'), sx(c.x), sy(c.y + 1.6) + Math.sin(ahora * 4) * 3, TS * 0.5);
+    if (p.i === 4 && !p.fuera[i] && !sigue.length) emoji('👋', sx(c.x), sy(c.y + 1.5) + Math.sin(ahora * 4) * 3, TS * 0.45);
+  });
+  // Comida afuera, la canasta y lo que lleva el monito
+  if (p.i === 1) COMIDAS.slice(0, COMIDAS.length - p.comida - (carga ? 1 : 0)).forEach(([emo, x]) => emoji(emo, sx(x), sy(0.45 + Math.sin(ahora * 3 + x) * 0.08), TS * 0.6));
+  if (p.i >= 1 && p.i < 4) { emoji('🧺', sx(BODEGA), sy(0.6), TS * 0.8); if (p.comida) emoji(COMIDAS.slice(0, Math.min(3, p.comida)).map(c => c[0]).join(''), sx(BODEGA), sy(1.2), TS * 0.35); }
+  if (carga) emoji(carga, sx(mono.x), sy(mono.y + mono.h + 0.5), TS * 0.55);
+  // Paloma y el agua alrededor del arca
+  if (p.i === 3) {
+    cx.fillStyle = 'rgba(37,99,235,.55)';
+    cx.fillRect(0, sy(1.1), sx(MARGEN), H2); cx.fillRect(sx(MARGEN + COLS), sy(1.1), W2, H2);
+    if (p.paloma < 3) { cx.setLineDash([4, 3]); cx.strokeStyle = `rgba(250,204,21,${0.5 + 0.5 * pulso})`; cx.lineWidth = 3; cx.strokeRect(sx(VENTANA[0]), sy(FILAS), (VENTANA[1] - VENTANA[0]) * TS, TS * 0.4); cx.setLineDash([]); }
+    if (paloma) {
+      const ida = Math.min(1, paloma.t / 2), vuelta = paloma.n < 3 ? Math.max(0, (paloma.t - 3) / 2) : 0, f = ida - vuelta;
+      const x = MARGEN + 30 + f * 14, y = FILAS + 0.5 + f * 3 + Math.sin(paloma.t * 10) * 0.1;
+      cx.save(); cx.translate(sx(x), sy(y)); if (paloma.t < 2.5) cx.scale(-1, 1);
+      emoji('🕊️', 0, 0, TS * 0.8); cx.restore();
+      if (paloma.n === 2 && paloma.t > 3) emoji('🌿', sx(x) - TS * 0.3, sy(y) + TS * 0.2, TS * 0.4);
+    }
+  }
+  for (const s of sigue) emoji(s.a.emo, sx(s.x), sy(s.y + 0.45 + Math.abs(Math.sin(ahora * 9 + s.x)) * 0.12), TS * 0.7);
+}
+
+// Dar de comer: el número grande dice cuántas quiere; se tocan las frutas para dárselas
+let comida = null;
+function abrirComer(i) {
+  const a = animalCorral(i), l = lenguaReto(), n = E.nivel === 3 ? 2 + azar(7) : 1 + azar([3, 5][E.nivel - 1]), fruta = FRUTA[a.id] || '🍎';
+  comida = { i, a, l, n, fruta, puestos: 0, intentos: 0 };
+  $('comerAnimal').textContent = a.emo;
+  $('comerFruta').innerHTML = `<span>${fruta}</span><span class="puntos">+1</span>`;
+  $('comerPlato').innerHTML = '';
+  pintarNumeroComer();
+  $('comer').classList.add('abierta');
+  decirComer();
+}
+function pintarNumeroComer() { const { n } = comida; $('comerNumero').innerHTML = `${n}${E.nivel < 3 || comida.intentos ? `<div style="font-size:.45em;letter-spacing:4px;color:#0284c7">${'●'.repeat(n)}</div>` : ''}`; }
+function decirComer() {
+  const { a, l, n } = comida, nom = a[l][0].toLowerCase(), art = l === 'es' ? (a.g === 'f' ? 'La' : 'El') : 'The';
+  decir([{ l, t: l === 'es' ? `${art} ${nom} quiere ${n}. ¡Dale ${n}!` : `${art} ${nom} wants ${n}. Give it ${n}!` }]);
+}
+$('comerOir').onclick = () => comida && decirComer();
+$('comerFruta').onclick = () => {
+  if (!comida || comida.puestos >= 10) return;
+  comida.puestos++;
+  const f = document.createElement('button'); f.className = 'contable'; f.textContent = comida.fruta;
+  f.onclick = () => { f.remove(); comida.puestos--; sfx.pop(); };   // tocar una del plato la quita
+  $('comerPlato').appendChild(f); sfx.pop(); decir([{ l: comida.l, t: String(comida.puestos) }]);
+};
+$('comerListo').onclick = () => {
+  if (!comida) return;
+  const { n, puestos, l } = comida;
+  if (puestos !== n) {
+    comida.intentos++; sfx.casi(); pintarNumeroComer();
+    decir([{ l, t: l === 'es' ? `¡Casi! Quiere ${n}. Le diste ${puestos}.` : `Almost! It wants ${n}. You gave ${puestos}.` }]);
+    return;
+  }
+  sfx.bien(); decir([{ l, t: (l === 'es' ? '¡Sí! ' : 'Yes! ') + Array.from({ length: n }, (_, k) => k + 1).join(', ') + (l === 'es' ? '. ¡Gracias!' : '. Thank you!') }]);
+  evento('contar'); if (!comida.intentos) E.estrellas++;
+  E.post.comio.push(comida.i); guardar(); comida = null; tComer = 1;
+  setTimeout(() => {
+    $('comer').classList.remove('abierta');
+    const c = posCorral(E.post.comio[E.post.comio.length - 1]); flotar('💗', c.x, c.y + 1.4, '#f472b6');
+    pintarPost(); if (E.post.comio.length >= HAMBRE.length) siguientePost();
+  }, 1600);
+};
+// La promesa: el arcoíris (Génesis 9:13)
+function finalPromesa() {
+  if ($('final').classList.contains('abierta')) return;
+  E.post.i = POST.length; guardar();
+  const f = $('final');
+  f.dataset.modo = 'promesa';
+  f.querySelectorAll('.gota').forEach(g => g.remove());
+  f.classList.add('abierta', 'sol');
+  $('arcaFinal').innerHTML = svgArca(TABLAS_ARCA, true, false);
+  const n = nombreNino();
+  const es = `${PROMESA.es}${n ? ', ' + n : ''}.`, en = `${PROMESA.en}${n ? ', ' + n : ''}.`;
+  $('historia').textContent = (E.idioma === 'en' ? en : es) + `  (${PROMESA.ref})`;
+  $('bNuevaArca').textContent = T('🏆 ¡Historia completa!', '🏆 Story complete!');
+  $('bNuevaArca').style.visibility = '';
+  sfx.fanfarria(); setTimeout(() => di(es, en), 600);
 }
 
 // ---------- Carrera de letras (obby): saltar por plataformas y juntar las letras del nombre del animal ----------
@@ -2421,7 +2663,7 @@ $('bReiniciar').onclick = () => {
   arbustos.forEach(b => b.el.remove()); arbustos = [];
   guardar(); $('panel').classList.remove('abierta'); pintarInicio(); mostrar('inicio');
 };
-function cerrarCapas() { ['reto', 'festejo', 'premio', 'finObby', 'finDiluvio'].forEach(id => $(id).classList.remove('abierta')); reto = null; ocupado = false; }
+function cerrarCapas() { ['reto', 'festejo', 'premio', 'finObby', 'finDiluvio', 'comer'].forEach(id => $(id).classList.remove('abierta')); reto = null; ocupado = false; }
 
 pintarInicio();
 </script>
