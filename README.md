@@ -9,6 +9,13 @@ Como en los juegos grandes, pero sin violencia y sin compras: tu personaje en su
 - **💃 Bailes:** toca a tu personaje o los botones de baile; en el arca, el botón 💃 hace bailar al monito.
 - **🐾 Mascota:** te sigue por el prado y por la obra del arca. Tócala para acariciarla.
 
+## 🌧️ ¡Diluvio! (Génesis 7)
+Empieza a llover y el agua sube poco a poco. Toca a los animales para que te sigan y llévalos al arca, que está en lo alto. **De dos en dos:** solo puedes llevar dos a la vez, así que hay que hacer varios viajes antes de que el agua llegue a la puerta.
+- Al subir, cada animal se cuenta en voz alta (1, 2, 3…) y cada pareja completa se festeja.
+- Sin perder: si el agua alcanza a un animal, flota en un tronco 🪵 y puedes ir nadando por él (⬆ para nadar hacia arriba).
+- Al final "Dios cerró la puerta del arca", sale el arcoíris 🌈, ganas de 1 a 3 ⭐ y respondes "¿Cuántos animales subieron?" (tócalos para contarlos).
+- Nivel fácil: 3 parejas; medio: 4; difícil: 5, con menos tiempo.
+
 ## 🏗️ Mi isla (modo creativo)
 Una isla propia para construir lo que quieras, con piezas como en los juegos de construir: 🧱 muros (sólidos), ▬ pisos (se pisan desde arriba) y ◢ rampas (se suben caminando; toca la rampa otra vez para voltearla). 8 materiales (madera, piedra, ladrillo, vidrio, oro, pasto, nieve, morado), 🌳 cosas para decorar y los animales que ya rescataste. 🧽 borra, ↩️ deshace y se puede pintar arrastrando el dedo.
 - Tu monito camina, salta y sube por lo que construyes; 🔭 muestra toda la isla.

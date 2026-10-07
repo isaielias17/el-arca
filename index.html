@@ -218,6 +218,22 @@
   #mandosI { position: absolute; left: 0; right: 0; bottom: 0; padding: 10px 12px max(10px, env(safe-area-inset-bottom)); display: flex; justify-content: space-between; align-items: flex-end; z-index: 4; pointer-events: none; }
   #mandosI .grupoMando button.saltoGrande { width: clamp(76px, 19vmin, 104px); height: clamp(76px, 19vmin, 104px); font-size: clamp(32px, 9vmin, 46px); }
 
+  /* ¡Diluvio! */
+  .modo.diluvio { background: linear-gradient(135deg, #475569, #0284c7); }
+  #diluvio { padding: 0; background: #64748b; overflow: hidden; }
+  #lienzoDiluvio { position: absolute; inset: 0; width: 100%; height: 100%; touch-action: none; }
+  #hudDiluvio { position: absolute; top: max(56px, calc(env(safe-area-inset-top) + 50px)); left: 8px; right: 8px; margin: 0 auto; width: fit-content; display: flex; align-items: center; gap: 10px; background: #fffffff0; border-radius: 20px; padding: 6px 10px 6px 14px; box-shadow: 0 4px 0 #0002; z-index: 4; }
+  .cuentaArca { font-size: clamp(22px, 5.5vmin, 32px); font-weight: 900; }
+  .cuentaArca b { color: #16a34a; }
+  .aguaBarra { width: clamp(80px, 26vw, 200px); height: 16px; border-radius: 999px; background: #e2e8f0; overflow: hidden; display: block; }
+  .aguaBarra span { display: block; height: 100%; width: 0; background: linear-gradient(90deg, #38bdf8, #1d4ed8); }
+  #mandosD { position: absolute; left: 0; right: 0; bottom: 0; padding: 10px 12px max(10px, env(safe-area-inset-bottom)); display: flex; justify-content: space-between; align-items: flex-end; z-index: 4; pointer-events: none; }
+  #mandosD .grupoMando button.saltoGrande { width: clamp(76px, 19vmin, 104px); height: clamp(76px, 19vmin, 104px); font-size: clamp(32px, 9vmin, 46px); }
+  #finDiluvio .tarjeta { background: linear-gradient(#e0f2fe, #fff); }
+  #fdEstrellas { font-size: clamp(40px, 10vmin, 60px); letter-spacing: 6px; }
+  #fdAnimales { max-width: 520px; }
+  #fdAnimales .contable { font-size: clamp(36px, 9vmin, 56px); }
+
   /* Pase del Arca */
   #pase { background: linear-gradient(#312e81, #6d28d9); color: #fff; gap: 12px; }
   #pase h2 { text-shadow: 0 3px 0 #0004; }
@@ -286,6 +302,7 @@
       <button id="bConstruir" class="modo construir"><span class="ico">🔨</span><b class="lbl"></b><small id="msgArca"></small><div id="arca"></div><span class="jugar"></span></button>
       <button id="bJugar" class="modo rescate"><span class="ico">🧭</span><b class="lbl"></b><small id="msgRescate"></small><span class="jugar"></span></button>
       <button id="bObby" class="modo carrera"><span class="ico">🏃</span><b class="lbl"></b><small id="msgObby"></small><span class="jugar"></span></button>
+      <button id="bDiluvio" class="modo diluvio"><span class="ico">🌧️</span><b class="lbl"></b><small id="msgDiluvio"></small><span class="jugar"></span></button>
       <button id="bIsla" class="modo creativo"><span class="ico">🏗️</span><b class="lbl"></b><small id="msgIsla"></small><span class="jugar"></span></button>
     </div>
   </div>
@@ -346,6 +363,19 @@
   </div>
 </section>
 
+<section id="diluvio" class="pantalla">
+  <canvas id="lienzoDiluvio"></canvas>
+  <div id="hudDiluvio">
+    <span class="cuentaArca">🚢 <b id="dCuenta">0</b>/<span id="dTotal">0</span></span>
+    <span class="aguaBarra"><span id="dAgua"></span></span>
+    <button id="dOir" class="chip">🔊</button>
+  </div>
+  <div id="mandosD">
+    <div class="grupoMando"><button data-k="izq" aria-label="Izquierda">◀</button><button data-k="der" aria-label="Derecha">▶</button></div>
+    <div class="grupoMando"><button data-k="arriba" aria-label="Saltar o nadar" class="saltoGrande">⬆</button></div>
+  </div>
+</section>
+
 <section id="personaje" class="pantalla">
   <h2 class="lbl-personaje"></h2>
   <div id="vistaAvatar"></div>
@@ -383,6 +413,19 @@
   <div class="fila-botones">
     <button class="grande" id="bOtraCarrera"></button>
     <button class="medio" id="bObbyLobby">🏝️ Lobby</button>
+  </div>
+</div></div>
+
+<div id="finDiluvio" class="capa"><div class="tarjeta">
+  <div class="texto-grande" id="fdTitulo"></div>
+  <div id="fdEstrellas"></div>
+  <div id="retoPreguntaD" class="texto-grande"></div>
+  <div id="fdAnimales" class="contables"></div>
+  <div id="fdOpciones" class="fila-botones"></div>
+  <div class="texto-grande" id="fdPremio"></div>
+  <div class="fila-botones" id="fdBotones">
+    <button class="grande" id="bOtroDiluvio"></button>
+    <button class="medio" id="bDiluvioLobby">🏝️ Lobby</button>
   </div>
 </div></div>
 
@@ -452,7 +495,7 @@ const LETRAS = 'ABCDEFGHIJLMNOPRSTUVZ';   // sin K, Ñ, Q, W, X, Y para no confu
 // ---------- Estado guardado (si el navegador lo permite) ----------
 const DEF = { estrellas: 0, coleccion: {}, madera: 30, mision: 0, obra: '', nivel: 1, arcas: 0,
               avatar: { cara: '👦', gorro: '🧢', color: '#4dabf7' }, nombre: '', idioma: 'ambos', bienvenida: false,
-              xp: 0, reclamado: 1, mascota: '', estela: '', baileFav: 'saludo', obby: { hechas: 0, records: {} }, isla: { celdas: {}, reto: 0 }, diarias: { fecha: '', ids: [], prog: [], cofre: false } };
+              xp: 0, reclamado: 1, mascota: '', estela: '', baileFav: 'saludo', obby: { hechas: 0, records: {} }, isla: { celdas: {}, reto: 0 }, diluvio: { jugadas: 0, mejor: 0 }, diarias: { fecha: '', ids: [], prog: [], cofre: false } };
 let E;
 try { E = JSON.parse(localStorage.getItem('arca.estado')) || {}; } catch { E = {}; }
 // Versión anterior: las tablas de 10 se convierten en madera para el arca grande
@@ -516,7 +559,7 @@ function avatarHTML(av, tam) {
 }
 function mostrar(id) {
   document.querySelectorAll('.pantalla').forEach(p => p.classList.toggle('activa', p.id === id));
-  enObra = id === 'obra'; enObby = id === 'obby'; enIsla = id === 'miIsla';
+  enObra = id === 'obra'; enObby = id === 'obby'; enIsla = id === 'miIsla'; enDiluvio = id === 'diluvio';
 }
 function barra() {
   $('cEstrellas').textContent = `⭐ ${E.estrellas}`;
@@ -580,6 +623,7 @@ const DIARIAS = {
   mascota: { ico: '🐾', meta: 3,  es: n => `Acaricia a tu mascota ${n} veces`, en: n => `Pet your pet ${n} times` },
   obby:    { ico: '🏃', meta: 1,  es: () => 'Termina una carrera de letras', en: () => 'Finish a letter run' },
   isla:    { ico: '🏗️', meta: 10, es: n => `Pon ${n} piezas en tu isla`, en: n => `Place ${n} pieces on your island` },
+  diluvio: { ico: '🌧️', meta: 1,  es: () => 'Juega al diluvio', en: () => 'Play the flood' },
 };
 const XP_DIARIA = 60, XP_COFRE = 100;
 const hoy = () => new Date().toLocaleDateString('sv');
@@ -654,6 +698,8 @@ function pintarInicio() {
   $('msgRescate').textContent = `🐾 ${total} / ${ANIMALES.length}   ·   +${MADERA_RESCATE} 🪵`;
   $('bJugar').querySelector('.lbl').textContent = T('Rescatar animales', 'Rescue animals');
   $('bConstruir').querySelector('.lbl').textContent = T('Construir el arca', 'Build the ark');
+  $('bDiluvio').querySelector('.lbl').textContent = T('¡Diluvio!', 'Flood!');
+  $('msgDiluvio').textContent = T('🌊 Sube los animales al arca', '🌊 Get the animals into the ark') + (E.diluvio.mejor ? `  ·  ${'⭐'.repeat(E.diluvio.mejor)}` : '');
   $('bIsla').querySelector('.lbl').textContent = T('Mi isla', 'My island');
   $('msgIsla').textContent = T('🧱 Construye lo que quieras', '🧱 Build anything you want') + (E.isla.reto < RETOS_ISLA.length ? `  ·  🎯 ${E.isla.reto}/${RETOS_ISLA.length}` : '  ·  🌟');
   $('bObby').querySelector('.lbl').textContent = T('Carrera de letras', 'Letter run');
@@ -1475,7 +1521,7 @@ const soltarDedo = () => { if (dedoAbajo) { dedoAbajo = false; guardarObra(); } 
 ['pointerup', 'pointercancel'].forEach(t => lienzo.addEventListener(t, soltarDedo));
 
 // Botones y teclado para mover al monito
-document.querySelectorAll('#mandos [data-k], #mandosO [data-k], #mandosI [data-k]').forEach(b => {
+document.querySelectorAll('#mandos [data-k], #mandosO [data-k], #mandosI [data-k], #mandosD [data-k]').forEach(b => {
   const k = b.dataset.k;
   const on = e => { e.preventDefault(); audio(); teclas[k] = true; if (k === 'arriba') teclas.saltar = true; b.classList.add('on'); };
   const off = () => { teclas[k] = false; b.classList.remove('on'); };
@@ -1484,7 +1530,7 @@ document.querySelectorAll('#mandos [data-k], #mandosO [data-k], #mandosI [data-k
 });
 const MAPA_TECLAS = { ArrowLeft: 'izq', KeyA: 'izq', ArrowRight: 'der', KeyD: 'der', ArrowUp: 'arriba', KeyW: 'arriba', Space: 'arriba', ArrowDown: 'abajo', KeyS: 'abajo' };
 addEventListener('keydown', e => {
-  const k = MAPA_TECLAS[e.code]; if (!k || !(enObra || enObby || enIsla)) return;
+  const k = MAPA_TECLAS[e.code]; if (!k || !(enObra || enObby || enIsla || enDiluvio)) return;
   e.preventDefault(); if (k === 'arriba' && !e.repeat) teclas.saltar = true; teclas[k] = true;
 });
 addEventListener('keyup', e => { const k = MAPA_TECLAS[e.code]; if (k) teclas[k] = false; });
@@ -2080,6 +2126,260 @@ $('bIsla').onclick = () => entrarIsla();
 $('bBaileI').onclick = () => bailar(bailesMios().includes(E.baileFav) ? E.baileFav : 'saludo', true);
 $('bVistaI').onclick = () => { vistaI = !vistaI; $('bVistaI').classList.toggle('on', vistaI); medirIsla(); };
 
+// ---------- ¡Diluvio! El agua sube: lleva a los animales al arca antes de que Dios cierre la puerta (Génesis 7) ----------
+// Sin perder: los animales que alcanza el agua flotan en un tronco y se pueden recoger nadando. Al final se cuentan.
+const lienzoD = $('lienzoDiluvio'), dx = lienzoD.getContext('2d');
+let enDiluvio = false, dl = null, DTS = 40, DW = 0, DH = 0, dbase = 0, dcamX = 0;
+const DANCHO = 62, PUERTA = 51.5, MESETA = 5;   // el arca está en lo alto, a la derecha
+const PARES = [3, 4, 5], DURACION = [100, 90, 80], MAX_FILA = 2;   // por nivel: parejas y segundos hasta que el agua llega a la puerta; de dos en dos (varios viajes)
+const dj = { x: 2, y: 1.5, vx: 0, vy: 0, w: 0.6, h: 1.3, suelo: true, mira: 1, paso: 0, emote: null };
+const mascotaD = { x: 1, y: 1.5, dir: 1 };
+function medirDiluvio() {
+  const dpr = Math.min(devicePixelRatio || 1, 2);
+  DW = innerWidth; DH = innerHeight;
+  lienzoD.width = DW * dpr; lienzoD.height = DH * dpr; dx.setTransform(dpr, 0, 0, dpr, 0, 0);
+  dbase = DH - Math.max(110, Math.min(DW, DH) * 0.15 + 34);
+  const arriba = $('hudDiluvio').getBoundingClientRect().bottom + 10;
+  DTS = Math.max(28, Math.min((dbase - arriba) / 9.5, DW / 10));
+}
+addEventListener('resize', () => { if (enDiluvio) medirDiluvio(); });
+const dsx = x => (x - dcamX) * DTS, dsy = y => dbase - y * DTS;
+function altura(x) {   // colinas suaves entre puntos cada 4 bloques
+  const p = dl.puntos, i = Math.max(0, Math.min(p.length - 2, Math.floor(x / 4))), f = Math.max(0, Math.min(1, x / 4 - i)), s = (1 - Math.cos(f * Math.PI)) / 2;
+  return p[i] * (1 - s) + p[i + 1] * s;
+}
+function entrarDiluvio() {
+  const puntos = [];
+  for (let x = 0; x <= DANCHO + 4; x += 4) puntos.push(x < 4 ? 1.5 : x < 46 ? [0, 0.8, 1.6, 2.6, 3.2][azar(5)] : MESETA);
+  const pares = PARES[E.nivel - 1], mios = mezclar(ANIMALES.filter(a => E.coleccion[a.id])), otros = mezclar(ANIMALES.filter(a => !E.coleccion[a.id]));
+  const especies = [...mios, ...otros].slice(0, pares);
+  // Cada animal en su lugar (las parejas separadas, para explorar)
+  const xs = [];
+  for (let intento = 0; xs.length < pares * 2; intento++) { const x = 6 + Math.random() * 39; if (intento > 500 || xs.every(o => Math.abs(o - x) > 2.4)) xs.push(x); }
+  mezclar(xs);
+  dl = { puntos, l: lenguaReto(), t: 0, dur: DURACION[E.nivel - 1], agua: -0.6, activo: true, dentro: 0, hist: [], fila: [], tSubir: 0,
+         gotas: [], textos: [], chispas: [], cerrada: 0,
+         animales: xs.map((x, k) => ({ a: especies[k >> 1], x, y: 0, estado: 'espera', fase: Math.random() * 6 })) };
+  for (const an of dl.animales) an.y = altura(an.x);
+  Object.assign(dj, { x: 2, y: altura(2), vx: 0, vy: 0, suelo: true, mira: 1, emote: null });
+  Object.assign(mascotaD, { x: 1, y: dj.y });
+  mostrar('diluvio'); medirDiluvio();
+  dcamX = Math.max(-1, dj.x - DW / DTS / 2);
+  $('dTotal').textContent = dl.animales.length; $('dCuenta').textContent = 0;
+  const yo = dl;
+  let tAnt = 0;
+  const bucle = t => {
+    if (!enDiluvio || dl !== yo) return;
+    const dt = Math.min(0.05, (t - tAnt) / 1000 || 0); tAnt = t;
+    if (dl.activo) pasoDiluvio(dt);
+    dibujarDiluvio(dt);
+    requestAnimationFrame(bucle);
+  };
+  requestAnimationFrame(t => { tAnt = t; bucle(t); });
+  setTimeout(() => dl === yo && decirDiluvio(), 300);
+}
+function decirDiluvio() {
+  di('¡Va a llover! Lleva a los animales al arca.', "It's going to rain! Take the animals to the ark.");
+}
+$('dOir').onclick = () => dl && di('Toca a los animales para que te sigan. Llévalos al arca, a la derecha.', 'Touch the animals so they follow you. Take them to the ark, on the right.');
+const flotarD = (t, x, y, col = '#fff') => dl.textos.push({ t, x, y, col, vida: 1.2 });
+
+function pasoDiluvio(dt) {
+  dl.t += dt;
+  dl.agua = -0.6 + (MESETA + 0.6) * Math.min(1, dl.t / dl.dur);
+  $('dAgua').style.width = Math.min(100, dl.t / dl.dur * 100) + '%';
+  // El monito: camina por las colinas; en el agua va más lento y ⬆ nada hacia arriba
+  const j = dj, suelo = altura(j.x), enAgua = j.y < dl.agua - 0.6, estaba = j.suelo;
+  j.vx = ((teclas.der ? 1 : 0) - (teclas.izq ? 1 : 0)) * (enAgua ? 3.2 : 4.5);
+  if (j.vx) j.mira = Math.sign(j.vx);
+  if (enAgua) { j.vy += (teclas.arriba ? 16 : -6) * dt; j.vy = Math.max(-3, Math.min(4, j.vy)); }
+  else { if (teclas.saltar && j.suelo) { j.vy = 9; tono(520, 0, 0.12, 'sine', 0.08); } j.vy = Math.max(-15, j.vy - 25 * dt); }
+  teclas.saltar = false;
+  j.x = Math.max(0.4, Math.min(DANCHO - 0.6, j.x + j.vx * dt));
+  if (j.x > PUERTA + 0.3 && dl.cerrada === 0) j.x = PUERTA + 0.3;   // se queda en la puerta
+  j.y += j.vy * dt;
+  const g = altura(j.x);
+  if (j.y <= g || (estaba && !enAgua && j.vy <= 0 && j.y - g < 0.4)) { j.y = g; j.vy = 0; j.suelo = true; } else j.suelo = false;
+  if (j.vx && j.suelo) j.paso += dt * 12;
+  if (j.emote && (j.emote.t += dt) > 1.4) j.emote = null;
+  // Camino del monito: los animales lo siguen en fila
+  dl.hist.push({ x: j.x, y: j.y }); if (dl.hist.length > 900) dl.hist.shift();
+  const cy = j.y + 0.65;
+  for (const an of dl.animales) {
+    if (an.estado === 'dentro' || an.estado === 'sigue') continue;
+    const sueloA = altura(an.x);
+    if (dl.agua > sueloA + 0.15) { if (an.estado === 'espera') { an.estado = 'flota'; tono(500, 0, 0.15, 'sine', 0.08); } an.y = dl.agua - 0.1; an.x = Math.max(4, Math.min(46, an.x + Math.sin(dl.t + an.fase) * 0.2 * dt)); }
+    if (Math.hypot(an.x - j.x, an.y + 0.4 - cy) < 1.1) {   // tocarlo: se une a la fila (de dos en dos)
+      if (dl.fila.length >= MAX_FILA) {
+        if (dl.t - (dl.avisoLleno ?? -9) > 4) { dl.avisoLleno = dl.t; di('¡De dos en dos! Primero lleva estos al arca.', 'Two by two! Take these to the ark first.'); }
+        continue;
+      }
+      an.estado = 'sigue'; dl.fila.push(an);
+      tono(659, 0, 0.1, 'triangle', 0.12); tono(988, 0.08, 0.15, 'triangle', 0.12);
+      flotarD('💗', an.x, an.y + 1.2); di(an.a.es[0], an.a.en[0]);
+    }
+  }
+  dl.fila.forEach((an, k) => {
+    const h = dl.hist[Math.max(0, dl.hist.length - 1 - (k + 1) * 14)];
+    an.x += (h.x - an.x) * Math.min(1, dt * 10); an.y += (h.y - an.y) * Math.min(1, dt * 10);
+  });
+  // En la puerta del arca suben uno por uno, y se cuentan
+  if ((dl.tSubir -= dt) <= 0 && dl.fila.length && j.x >= PUERTA - 1.2 && j.y >= MESETA - 0.1) {
+    const an = dl.fila.shift();
+    an.estado = 'dentro'; dl.dentro++; dl.tSubir = 0.45;
+    $('dCuenta').textContent = dl.dentro;
+    tono([523, 587, 659, 698, 784, 880, 988, 1047, 1175, 1319][Math.min(dl.dentro - 1, 9)], 0, 0.3, 'triangle', 0.15);
+    flotarD(String(dl.dentro), PUERTA + 0.5, MESETA + 2.2, '#22c55e');
+    for (let k = 0; k < 10; k++) dl.chispas.push({ x: PUERTA + 0.5, y: MESETA + 0.8, vx: (Math.random() - 0.5) * 5, vy: 2 + Math.random() * 4, vida: 0.7, col: COLORES_O[k % 6] });
+    decir([{ l: dl.l, t: String(dl.dentro) }]);
+    const pareja = dl.animales.filter(o => o.a === an.a);
+    if (pareja.every(o => o.estado === 'dentro')) setTimeout(() => {   // de dos en dos, como en Génesis 7:9
+      if (!dl) return;
+      flotarD(an.a.emo + an.a.emo + ' ✓', PUERTA - 1, MESETA + 3, '#fde047');
+      toast(T(`👫 ¡Pareja completa! ${an.a.emo}${an.a.emo}`, `👫 Pair complete! ${an.a.emo}${an.a.emo}`));
+    }, 300);
+  }
+  moverMascotaD(dt);
+  if (dl.dentro === dl.animales.length) terminarDiluvio(true);
+  else if (dl.t >= dl.dur) terminarDiluvio(false);
+}
+function moverMascotaD(dt) {
+  if (!E.mascota) return;
+  const meta = dj.x - dj.mira * 0.9;
+  if (Math.abs(meta - mascotaD.x) > 6) { mascotaD.x = meta; mascotaD.y = dj.y; }
+  const vx = (meta - mascotaD.x) * Math.min(1, dt * 4);
+  if (Math.abs(vx) > 0.002) mascotaD.dir = Math.sign(vx);
+  mascotaD.x += vx; mascotaD.y += (dj.y - mascotaD.y) * Math.min(1, dt * 5);
+}
+
+// ---------- Fin: Dios cierra la puerta, sale el arcoíris y contamos los animales ----------
+function terminarDiluvio(todos) {
+  dl.activo = false; dl.cerrada = 0.01;
+  [392, 330, 262].forEach((f, k) => tono(f, k * 0.2, 0.4, 'triangle', 0.12));
+  const n = dl.dentro, total = dl.animales.length, est = n === total ? 3 : n >= total / 2 ? 2 : 1;
+  const yo = dl;
+  setTimeout(() => yo === dl && enDiluvio && abrirFinDiluvio(todos, n, est), 1400);
+}
+function abrirFinDiluvio(todos, n, est) {
+  const l = dl.l, dentro = dl.animales.filter(o => o.estado === 'dentro');
+  $('fdTitulo').textContent = todos ? T('🌈 ¡Todos a salvo! Dios cerró la puerta del arca.', '🌈 Everyone is safe! God shut the door of the ark.')
+                                    : T('🌈 Dios cerró la puerta del arca.', '🌈 God shut the door of the ark.');
+  $('fdEstrellas').textContent = '⭐'.repeat(est) + '☆'.repeat(3 - est);
+  $('fdPremio').textContent = ''; $('fdBotones').style.display = 'none';
+  $('bOtroDiluvio').textContent = T('🔁 Otra vez', '🔁 Again');
+  const ver = $('fdAnimales'), opc = $('fdOpciones');
+  ver.innerHTML = ''; opc.innerHTML = '';
+  $('finDiluvio').classList.add('abierta'); sfx.fanfarria();
+  if (!n) { $('retoPreguntaD').textContent = ''; premiarDiluvio(n, est, false); di('¡Inténtalo otra vez! Toca a los animales para que te sigan.', 'Try again! Touch the animals so they follow you.'); return; }
+  // ¿Cuántos subieron? Tocar cada animal lo cuenta en voz alta
+  $('retoPreguntaD').textContent = l === 'es' ? '¿Cuántos animales subieron?' : 'How many animals got on?';
+  let contados = 0;
+  for (const o of dentro) {
+    const c = document.createElement('button');
+    c.className = 'contable'; c.textContent = o.a.emo;
+    c.onclick = () => { if (c.querySelector('.num')) return; contados++; c.insertAdjacentHTML('beforeend', `<span class="num">${contados}</span>`); sfx.pop(); decir([{ l, t: String(contados) }]); };
+    ver.appendChild(c);
+  }
+  const cerca = []; for (let d = 1; cerca.length < 6 && d < 12; d++) { if (n - d >= 1) cerca.push(n - d); if (n + d <= dl.animales.length + 1) cerca.push(n + d); }
+  let intentos = 0;
+  for (const v of mezclar([n, ...mezclar(cerca).slice(0, numOpciones() - 1)])) {
+    const b = document.createElement('button');
+    b.className = 'opcion'; b.innerHTML = `<span>${v}</span>`; b.dataset.ok = v === n ? '1' : '';
+    b.onclick = () => {
+      if (b.disabled) return;
+      if (v !== n) { intentos++; b.disabled = true; b.classList.add('mal'); sfx.casi(); decir([{ l, t: l === 'es' ? '¡Casi! Cuenta otra vez.' : 'Almost! Count again.' }]); if (intentos >= 2) opc.querySelector('[data-ok="1"]').classList.add('pista'); return; }
+      b.classList.add('bien'); opc.querySelectorAll('button').forEach(x => x.disabled = true); sfx.bien();
+      decir([{ l, t: (l === 'es' ? '¡Sí! ' : 'Yes! ') + Array.from({ length: n }, (_, k) => k + 1).join(', ') + '. ¡' + n + '!' }]);
+      evento('contar'); premiarDiluvio(n, est, intentos === 0);
+    };
+    opc.appendChild(b);
+  }
+  setTimeout(() => decir([{ l, t: $('retoPreguntaD').textContent + (l === 'es' ? ' ¡Tócalos para contar!' : ' Tap them to count!') }]), 900);
+}
+function premiarDiluvio(n, est, primera) {
+  const xp = 30 + est * 20 + (primera ? 10 : 0), madera = n * 5;
+  E.estrellas += est * 2; E.madera += madera; E.diluvio.jugadas++; E.diluvio.mejor = Math.max(E.diluvio.mejor, est);
+  for (const o of dl.animales) if (o.estado === 'dentro') E.coleccion[o.a.id] = (E.coleccion[o.a.id] || 0) + 1;
+  guardar(); ganarXP(xp); evento('diluvio'); if (n) evento('rescate', n);
+  $('fdPremio').textContent = `+${est * 2} ⭐   +${madera} 🪵   +${xp} XP`;
+  $('fdBotones').style.display = '';
+}
+$('bOtroDiluvio').onclick = () => { $('finDiluvio').classList.remove('abierta'); entrarDiluvio(); };
+$('bDiluvioLobby').onclick = () => { $('finDiluvio').classList.remove('abierta'); pintarInicio(); mostrar('inicio'); };
+$('bDiluvio').onclick = () => entrarDiluvio();
+
+// ---------- Dibujo del diluvio ----------
+const mezclaColor = (a, b, f) => { const h = s => [1, 3, 5].map(i => parseInt(s.slice(i, i + 2), 16)); const [x, y] = [h(a), h(b)]; return `rgb(${x.map((v, i) => Math.round(v + (y[i] - v) * f)).join(',')})`; };
+function dibujarDiluvio(dt) {
+  const g = dx, ahora = performance.now() / 1000, p = Math.min(1, dl.t / dl.dur), sol = dl.cerrada > 0;
+  if (sol) dl.cerrada = Math.min(1, dl.cerrada + dt);
+  const objetivo = Math.max(-1, Math.min(DANCHO + 1 - DW / DTS, dj.x - DW / DTS / 2));
+  dcamX += (objetivo - dcamX) * Math.min(1, dt * 5);
+  // El cielo se nubla mientras llueve; al cerrar la puerta vuelve el sol
+  const f = sol ? (1 - dl.cerrada) * p : p;
+  const cielo = g.createLinearGradient(0, 0, 0, dbase);
+  cielo.addColorStop(0, mezclaColor('#7cc8ff', '#475569', f)); cielo.addColorStop(1, mezclaColor('#e0f6ff', '#94a3b8', f));
+  g.fillStyle = cielo; g.fillRect(0, 0, DW, DH);
+  if (sol) { g.globalAlpha = dl.cerrada; emoji('🌈', DW / 2, DH * 0.3, Math.min(DW, DH) * 0.45, g); g.globalAlpha = 1; }
+  for (let k = 0; k < 5; k++) emoji(f > 0.3 ? '🌧️' : '☁️', ((ahora * (8 + k * 3) + k * 240) % (DW + 300)) - 150, DH * 0.22 + (k % 3) * 40, 60, g);
+  // Colinas
+  g.fillStyle = '#4ade80'; g.beginPath(); g.moveTo(dsx(dcamX - 1), DH);
+  for (let x = Math.floor(dcamX) - 1; x <= dcamX + DW / DTS + 1; x += 0.25) g.lineTo(dsx(x), dsy(altura(Math.max(0, x))));
+  g.lineTo(DW + 10, DH); g.closePath(); g.fill();
+  g.fillStyle = '#a16207'; g.beginPath(); g.moveTo(dsx(dcamX - 1), DH);
+  for (let x = Math.floor(dcamX) - 1; x <= dcamX + DW / DTS + 1; x += 0.25) g.lineTo(dsx(x), dsy(altura(Math.max(0, x)) - 0.35));
+  g.lineTo(DW + 10, DH); g.closePath(); g.fill();
+  for (const tx of [3, 13, 22, 31, 40]) emoji('🌳', dsx(tx), dsy(altura(tx) + 0.8), DTS * 1.6, g);
+  // El arca en lo alto, con la puerta al costado
+  const ax = dsx(PUERTA - 0.4), ay = dsy(MESETA);
+  g.fillStyle = '#8b5426'; g.strokeStyle = '#5c2e0e'; g.lineWidth = 3;
+  g.beginPath(); g.moveTo(ax, ay); g.lineTo(dsx(DANCHO - 1), ay); g.lineTo(dsx(DANCHO + 0.2), dsy(MESETA + 2.2)); g.lineTo(dsx(PUERTA - 1.4), dsy(MESETA + 2.2)); g.closePath(); g.fill(); g.stroke();
+  g.fillStyle = '#deb887'; g.fillRect(dsx(PUERTA + 2), dsy(MESETA + 3.6), 6 * DTS, 1.4 * DTS); g.strokeRect(dsx(PUERTA + 2), dsy(MESETA + 3.6), 6 * DTS, 1.4 * DTS);
+  g.fillStyle = '#b45309'; g.beginPath(); g.moveTo(dsx(PUERTA + 1.6), dsy(MESETA + 3.6)); g.lineTo(dsx(PUERTA + 5), dsy(MESETA + 4.6)); g.lineTo(dsx(PUERTA + 8.4), dsy(MESETA + 3.6)); g.fill();
+  const adentro = dl.animales.filter(o => o.estado === 'dentro');
+  adentro.slice(-6).forEach((o, k) => emoji(o.a.emo, dsx(PUERTA + 2.6 + k), dsy(MESETA + 2.9), DTS * 0.75, g));   // se asoman por las ventanas
+  g.fillStyle = sol ? '#7c4a21' : '#1f2937'; g.fillRect(dsx(PUERTA), dsy(MESETA + 1.7), DTS * 1.1, 1.7 * DTS);   // la puerta (abierta = oscura)
+  if (!sol && dl.fila.length) emoji('⬅️', dsx(PUERTA + 0.55), dsy(MESETA + 2.3) + Math.sin(ahora * 6) * 4, DTS * 0.6, g);
+  if (!sol && dl.fila.length >= MAX_FILA) emoji('➡️🚢', dsx(dj.x), dsy(dj.y + 2.2) + Math.sin(ahora * 6) * 4, DTS * 0.6, g);   // ya lleva dos: al arca
+  // Animales
+  for (const an of dl.animales) {
+    if (an.estado === 'dentro') continue;
+    const bote = an.estado === 'sigue' ? Math.abs(Math.sin(ahora * 9 + an.fase)) * 0.15 : an.estado === 'flota' ? Math.sin(ahora * 2 + an.fase) * 0.08 : Math.abs(Math.sin(ahora * 2 + an.fase)) * 0.08;
+    if (an.estado === 'flota') emoji('🪵', dsx(an.x), dsy(an.y + 0.1), DTS * 0.9, g);
+    if (an.estado === 'espera' && Math.sin(ahora * 3 + an.fase) > 0.6) emoji('❗', dsx(an.x), dsy(an.y + 1.6), DTS * 0.5, g);
+    emoji(an.a.emo, dsx(an.x), dsy(an.y + 0.45 + bote), DTS * 0.85, g);
+  }
+  // Monito y mascota
+  pintarMonito(g, dsx(dj.x), dsy(dj.y), dj.h * DTS, dj);
+  if (E.mascota) {
+    g.save(); g.translate(dsx(mascotaD.x), dsy(mascotaD.y + 0.35 + Math.abs(Math.sin(ahora * 8)) * 0.08));
+    if (mascotaD.dir > 0) g.scale(-1, 1);
+    emoji(E.mascota, 0, 0, DTS * 0.6, g); g.restore();
+  }
+  // El agua (encima de todo lo que tapa) y la lluvia
+  const ya = dsy(dl.agua);
+  g.fillStyle = 'rgba(37, 99, 235, .55)'; g.fillRect(0, ya, DW, DH - ya);
+  g.fillStyle = 'rgba(147, 197, 253, .8)';
+  for (let x = -((dcamX * DTS) % 40 + 40) % 40 - 40; x < DW + 40; x += 40) { g.beginPath(); g.arc(x + Math.sin(ahora * 2 + x) * 3, ya, 12, Math.PI, 0); g.fill(); }
+  if (!sol && p > 0.02) {
+    g.strokeStyle = 'rgba(219, 234, 254, .7)'; g.lineWidth = 2; g.beginPath();
+    const n = Math.floor(40 + p * 80);
+    for (let k = 0; k < n; k++) { const x = (k * 137.5 + ahora * 60) % DW, y = (k * 71 + ahora * 600) % DH; g.moveTo(x, y); g.lineTo(x - 3, y + 14); }
+    g.stroke();
+  }
+  // Chispas y textos
+  dl.chispas = dl.chispas.filter(d => (d.vida -= dt) > 0);
+  for (const d of dl.chispas) { d.x += d.vx * dt; d.y += d.vy * dt; d.vy -= 12 * dt; g.fillStyle = d.col; g.fillRect(dsx(d.x) - 4, dsy(d.y) - 4, 8, 8); }
+  dl.textos = dl.textos.filter(t => (t.vida -= dt * 0.8) > 0);
+  g.textAlign = 'center'; g.textBaseline = 'middle';
+  for (const t of dl.textos) {
+    t.y += dt * 1.2; g.globalAlpha = Math.min(1, t.vida * 2);
+    g.font = `900 ${Math.max(22, DTS * 0.8)}px ${EMOJI}`; g.lineWidth = 4; g.strokeStyle = '#0006';
+    g.strokeText(t.t, dsx(t.x), dsy(t.y)); g.fillStyle = t.col; g.fillText(t.t, dsx(t.x), dsy(t.y));
+  }
+  g.globalAlpha = 1;
+}
+
 // ---------- Ajustes para adultos (mantener 🔒 3 segundos) ----------
 const bCand = $('candado');
 let tCand = null;
@@ -2121,7 +2421,7 @@ $('bReiniciar').onclick = () => {
   arbustos.forEach(b => b.el.remove()); arbustos = [];
   guardar(); $('panel').classList.remove('abierta'); pintarInicio(); mostrar('inicio');
 };
-function cerrarCapas() { ['reto', 'festejo', 'premio', 'finObby'].forEach(id => $(id).classList.remove('abierta')); reto = null; ocupado = false; }
+function cerrarCapas() { ['reto', 'festejo', 'premio', 'finObby', 'finDiluvio'].forEach(id => $(id).classList.remove('abierta')); reto = null; ocupado = false; }
 
 pintarInicio();
 </script>
