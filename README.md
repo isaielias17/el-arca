@@ -2,6 +2,13 @@
 
 Juego bilingüe (español / English) para aprender letras y a contar mientras rescatas animales para el arca de Noé. Sin violencia, sin chat y sin anuncios.
 
+## 🏝️ El lobby
+Como en los juegos grandes, pero sin violencia y sin compras: tu personaje en su isla con su mascota, los modos de juego (🔨 Construir el arca y 🧭 Rescatar animales), las misiones de hoy y tu nivel.
+- **🎫 Pase del Arca:** 20 niveles. Todo da XP (rescatar, construir, atrapar premios, misiones) y cada nivel trae un premio que se abre con una animación: 🐶🐱🦜🐢🐼🕊️ mascotas, 💃🤸🤖🌀 bailes, caras, gorros y ✨🌈🎵⭐ estelas. En el nivel 20 eres el Capitán del Arca.
+- **🎯 Misiones de hoy:** 3 misiones cortas cada día (una siempre de letras o de contar). Al cumplir las 3 se abre un cofre 🎁. Tocar una misión la lee en voz alta.
+- **💃 Bailes:** toca a tu personaje o los botones de baile; en el arca, el botón 💃 hace bailar al monito.
+- **🐾 Mascota:** te sigue por el prado y por la obra del arca. Tócala para acariciarla.
+
 ## Cómo se juega
 1. **🧭 Explora:** camina con tu personaje por el prado y toca los árboles: detrás se esconden animalitos.
 2. **🦁 Rescata:** para rescatar a cada pareja hay un reto corto:

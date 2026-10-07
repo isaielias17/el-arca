@@ -17,6 +17,8 @@
   #barra { position: fixed; top: 0; left: 0; right: 0; z-index: 20; display: flex; gap: 8px; align-items: center; padding: 10px 12px; padding-top: max(10px, env(safe-area-inset-top)); pointer-events: none; }
   #barra > * { pointer-events: auto; }
   .chip { background: #ffffffd9; border-radius: 999px; padding: 6px 12px; font-weight: 700; font-size: 16px; box-shadow: 0 2px 0 #0001; }
+  .chip { white-space: nowrap; }
+  @media (max-width: 440px) { #barra { gap: 5px; padding-left: 8px; padding-right: 8px; } .chip { font-size: 14px; padding: 5px 9px; } }
   .espacio { flex: 1; }
   #candado.cargando { animation: llenar 3s linear forwards; }
   @keyframes llenar { from { box-shadow: inset 0 0 0 0 #0003; } to { box-shadow: inset 0 0 0 24px #0003; } }
@@ -27,13 +29,9 @@
   h2 { font-size: clamp(22px, 5vmin, 34px); text-align: center; margin-bottom: 8px; }
 
   /* Inicio: el arca */
-  #inicio { background: linear-gradient(var(--cielo1), var(--cielo2) 62%, #5dade2 62%, #2e86c1); justify-content: center; gap: 12px; }
-  #arca { width: min(92vw, 560px); background: none; }
-  #arca svg { width: 100%; height: auto; display: block; }
   #arca.sacude { animation: sacude .4s; }
   .tabla.nueva { animation: caer .45s ease-out; transform-box: fill-box; }
   @keyframes caer { from { transform: translateY(-40px); opacity: 0; } }
-  #msgArca { font-weight: 700; font-size: clamp(16px, 3.6vmin, 22px); text-align: center; background: #ffffffd9; padding: 8px 14px; border-radius: 14px; }
   .fila-botones { display: flex; gap: 12px; flex-wrap: wrap; justify-content: center; align-items: center; }
   .grande { background: #22c55e; color: #fff; font-size: clamp(22px, 5vmin, 34px); font-weight: 800; padding: 16px 36px; border-radius: 24px; box-shadow: 0 6px 0 #15803d; }
   .medio { background: #fff; font-size: clamp(16px, 3.6vmin, 22px); font-weight: 700; padding: 10px 16px; border-radius: 20px; box-shadow: 0 5px 0 #0002; display: flex; align-items: center; gap: 8px; }
@@ -133,6 +131,87 @@
   .grupoMando.columna button { width: 48px; height: 48px; font-size: 22px; border-radius: 16px; }
   .grupoMando button.on { transform: translateY(3px); background: #fef08a; }
 
+  /* Lobby (como el de los juegos grandes): personaje en su isla, misiones del día y modos de juego */
+  #inicio { background: linear-gradient(#6ec6ff, #d6f1ff 58%, #8ad0f0 58%, #3a9bd9); padding: 60px 14px 20px; }
+  #lobby { width: min(100%, 1100px); display: grid; gap: 14px; grid-template-areas: "cab" "esc" "mod" "mis"; margin: auto 0; }
+  @media (min-width: 860px) and (min-aspect-ratio: 1/1) { #lobby { grid-template-columns: 1fr 1.15fr 1fr; grid-template-areas: "cab cab cab" "mis esc mod"; align-items: start; } }
+  #lobbyCab { grid-area: cab; display: flex; flex-direction: column; align-items: center; gap: 8px; }
+  #bPase { display: flex; align-items: center; gap: 10px; background: #1e1b4b; color: #fff; border-radius: 999px; padding: 6px 16px 6px 6px; font-weight: 800; font-size: 16px; box-shadow: 0 5px 0 #0004; }
+  .nv { width: 46px; height: 46px; border-radius: 50%; background: linear-gradient(#fde047, #f59e0b); color: #1e1b4b; display: grid; place-items: center; font-size: 21px; font-weight: 900; flex: none; }
+  .xpbar { width: clamp(90px, 28vw, 200px); height: 12px; border-radius: 999px; background: #ffffff33; overflow: hidden; display: block; }
+  .xpbar span { display: block; height: 100%; background: linear-gradient(90deg, #22d3ee, #a78bfa); width: 0; transition: width .6s; }
+  #escenario { grid-area: esc; display: flex; flex-direction: column; align-items: center; gap: 10px; }
+  #isla { position: relative; width: min(84vw, 340px); height: min(62vw, 250px); }
+  #isla::before { content: ''; position: absolute; left: 0; right: 0; bottom: 0; height: 30%; border-radius: 50%; background: radial-gradient(#86efac 0 52%, #fde68a 53% 68%, #7dd3fc88 69%); }
+  #avLobby { position: absolute; left: 50%; bottom: 17%; transform: translateX(-50%); background: none; }
+  #avAnim { display: inline-block; transform-origin: 50% 100%; }
+  #mascotaLobby { position: absolute; right: 6%; bottom: 14%; font-size: clamp(44px, 12vmin, 68px); background: none; line-height: 1; animation: flota 2.4s ease-in-out infinite; }
+  #mascotaLobby.salta { animation: brinco .5s; }
+  @keyframes flota { 50% { transform: translateY(-8px); } }
+  @keyframes brinco { 40% { transform: translateY(-40px) rotate(-10deg); } }
+  #estelaLobby span { position: absolute; bottom: 20%; font-size: 24px; opacity: 0; animation: chispa 2.5s ease-out infinite; pointer-events: none; }
+  @keyframes chispa { 0% { opacity: 0; transform: translateY(0) scale(.5); } 30% { opacity: 1; } 100% { opacity: 0; transform: translateY(-140px) scale(1.2); } }
+  #emoteIco { position: absolute; left: 50%; top: 0; transform: translateX(-50%); font-size: 48px; opacity: 0; pointer-events: none; }
+  #emoteIco.ver { animation: emoteIco 1.4s ease-out; }
+  @keyframes emoteIco { 0% { opacity: 0; transform: translate(-50%, 30px) scale(.4); } 25% { opacity: 1; transform: translate(-50%, 0) scale(1.2); } 80% { opacity: 1; } 100% { opacity: 0; transform: translate(-50%, -20px); } }
+  .e-saludo { animation: e-saludo 1.2s; } @keyframes e-saludo { 20%, 60% { transform: rotate(-12deg); } 40%, 80% { transform: rotate(12deg); } }
+  .e-baile { animation: e-baile 1.4s; } @keyframes e-baile { 12%, 62% { transform: translateY(-22px) rotate(-14deg); } 37%, 87% { transform: translateY(-22px) rotate(14deg); } 25%, 50%, 75% { transform: none; } }
+  .e-voltereta { animation: e-voltereta 1.1s ease-in-out; } @keyframes e-voltereta { 45% { transform: translateY(-90px) rotate(200deg); } 90% { transform: translateY(0) rotate(360deg); } 100% { transform: rotate(360deg); } }
+  .e-robot { animation: e-robot 1.4s steps(1); } @keyframes e-robot { 15% { transform: translateX(-12px) rotate(-8deg); } 30% { transform: translateX(12px) rotate(8deg); } 45% { transform: translateY(-14px); } 60% { transform: translateX(-12px) rotate(8deg); } 75% { transform: translateX(12px) rotate(-8deg); } 90% { transform: none; } }
+  .e-giro { animation: e-giro 1.3s ease-in-out; } @keyframes e-giro { 50% { transform: translateY(-30px) rotateY(540deg); } 100% { transform: rotateY(1080deg); } }
+  #emotes button { width: 60px; height: 60px; border-radius: 50%; background: #fff; font-size: 30px; box-shadow: 0 4px 0 #0002; }
+  #emotes button:active { transform: translateY(3px); }
+  #misiones { grid-area: mis; background: #ffffffe8; border-radius: 22px; padding: 12px; display: flex; flex-direction: column; gap: 8px; box-shadow: 0 6px 0 #0002; }
+  #misiones h3 { margin: 0; font-size: 18px; }
+  .diaria { display: flex; align-items: center; gap: 10px; background: #f1f5f9; border-radius: 16px; padding: 8px 10px; text-align: left; width: 100%; }
+  .diaria .ico { font-size: 30px; flex: none; }
+  .diaria .txt { flex: 1; min-width: 0; }
+  .diaria b { font-size: 15px; display: block; }
+  .diaria .barraAv { margin-top: 4px; }
+  .diaria .barraAv span { background: #8b5cf6; }
+  .diaria .pr { font-weight: 900; color: #7c3aed; font-size: 14px; white-space: nowrap; }
+  .diaria.hecha { background: #dcfce7; }
+  .diaria.hecha .barraAv span { background: #22c55e; }
+  #bCofre { font-size: 22px; padding: 12px 20px; background: linear-gradient(#fbbf24, #f59e0b); box-shadow: 0 6px 0 #b45309; }
+  #cofreListo { text-align: center; font-weight: 700; color: #15803d; }
+  #modos { grid-area: mod; display: flex; flex-direction: column; gap: 12px; }
+  .modo { position: relative; border-radius: 24px; padding: 12px 16px; color: #fff; text-align: left; display: flex; flex-direction: column; gap: 4px; box-shadow: 0 7px 0 #0003; overflow: hidden; min-height: 120px; width: 100%; }
+  .modo:active { transform: translateY(4px); box-shadow: 0 3px 0 #0003; }
+  .modo b { font-size: clamp(22px, 4.6vmin, 30px); font-weight: 900; text-shadow: 0 2px 0 #0003; position: relative; padding-right: 58px; line-height: 1.15; }
+  .modo small { font-weight: 700; font-size: 14px; position: relative; }
+  .modo.construir { background: linear-gradient(135deg, #f59e0b, #ea580c); }
+  .modo.rescate { background: linear-gradient(135deg, #22c55e, #0d9488); }
+  .modo .ico { position: absolute; right: 12px; top: 8px; font-size: 56px; }
+  .modo .jugar { align-self: flex-start; background: #fff; color: #111; font-weight: 900; border-radius: 999px; padding: 5px 16px; margin-top: 4px; position: relative; }
+  .modo #arca { width: min(100%, 210px); align-self: center; margin: -4px 0 -10px; }
+  .modo #arca svg { width: 100%; height: auto; display: block; }
+  #bPersonaje, #bAlbum { font-size: 16px; }
+
+  /* Pase del Arca */
+  #pase { background: linear-gradient(#312e81, #6d28d9); color: #fff; gap: 12px; }
+  #pase h2 { text-shadow: 0 3px 0 #0004; }
+  #paseInfo { display: flex; align-items: center; gap: 12px; font-weight: 800; background: #0003; padding: 8px 16px 8px 8px; border-radius: 999px; }
+  #pista { display: flex; gap: 12px; overflow-x: auto; width: 100%; max-width: 1100px; padding: 14px 8px 18px; scroll-snap-type: x proximity; }
+  .nivelP { flex: none; width: 104px; scroll-snap-align: center; display: flex; flex-direction: column; align-items: center; gap: 6px; }
+  .nivelP .n { font-weight: 900; font-size: 15px; background: #0003; border-radius: 999px; padding: 2px 10px; }
+  .nivelP button { width: 104px; height: 124px; border-radius: 20px; background: linear-gradient(#a78bfa, #7c3aed); font-size: 52px; display: grid; place-items: center; box-shadow: 0 6px 0 #0004; position: relative; }
+  .nivelP.bloq button { filter: grayscale(.8) brightness(.75); }
+  .nivelP.bloq button::after { content: '🔒'; position: absolute; right: 6px; top: 4px; font-size: 18px; }
+  .nivelP.listo button { background: linear-gradient(#fde047, #f59e0b); animation: pulsa 1s infinite; }
+  .nivelP.listo button::after { content: '🎁'; position: absolute; right: 4px; top: 2px; font-size: 22px; }
+  .nivelP.tuyo button::after { content: '✓'; position: absolute; right: 6px; top: 6px; font-size: 16px; font-weight: 900; color: #fff; background: #22c55e; border-radius: 50%; width: 26px; height: 26px; display: grid; place-items: center; }
+  .nivelP.aqui .n { background: #fde047; color: #1e1b4b; }
+  .nivelP small { font-weight: 700; font-size: 12px; text-align: center; opacity: .9; }
+  #paseAyuda { font-weight: 700; text-align: center; max-width: 600px; }
+  #premio .tarjeta { background: radial-gradient(#fef9c3, #fde047 45%, #f59e0b); overflow: hidden; }
+  #premio .tarjeta > :not(#rayos) { position: relative; }
+  #rayos { position: absolute; inset: -60%; background: repeating-conic-gradient(#fff7 0 10deg, transparent 10deg 20deg); animation: gira 9s linear infinite; }
+  @keyframes gira { to { transform: rotate(360deg); } }
+  #premioEmo { font-size: clamp(100px, 28vmin, 180px); line-height: 1.1; animation: aparece .7s cubic-bezier(.3, 1.6, .6, 1); }
+  @keyframes aparece { from { transform: scale(0) rotate(-30deg); } }
+  #explorador { font-size: clamp(30px, 7vmin, 50px); }
+  .mascotaMundo { position: absolute; left: 92%; bottom: -6%; line-height: 1; }
+
   #toast { position: fixed; left: 50%; bottom: 24px; transform: translateX(-50%); background: #111d; color: #fff; padding: 10px 16px; border-radius: 14px; font-weight: 700; z-index: 40; opacity: 0; transition: opacity .3s; pointer-events: none; text-align: center; max-width: 90vw; }
   #toast.ver { opacity: 1; }
 </style>
@@ -142,22 +221,48 @@
   <button id="bInicio" class="chip" title="Inicio">🚢</button>
   <span class="chip" id="cEstrellas">⭐ 0</span>
   <span class="chip" id="cTablas">🪵 0/10</span>
+  <button class="chip" id="cNivel" title="Pase del Arca">🎫 1</button>
   <span class="espacio"></span>
   <button id="candado" class="chip" title="Mantén presionado 3 segundos">🔒</button>
 </header>
 
 <section id="inicio" class="pantalla activa">
-  <h1 id="titulo">El Arca</h1>
-  <button id="arca" aria-label="Arca"></button>
-  <p id="msgArca"></p>
-  <div class="fila-botones">
-    <button id="bJugar" class="grande">🧭 <span></span></button>
-    <button id="bConstruir" class="grande" style="background:#f59e0b;box-shadow:0 6px 0 #b45309">🔨 <span></span></button>
+  <div id="lobby">
+    <div id="lobbyCab">
+      <h1 id="titulo">El Arca</h1>
+      <button id="bPase"><span class="nv">1</span><span class="xpbar"><span></span></span><span class="lbl"></span></button>
+    </div>
+    <div id="escenario">
+      <div id="isla">
+        <div id="estelaLobby"></div>
+        <button id="avLobby" aria-label="Bailar"><span id="avAnim"></span></button>
+        <button id="mascotaLobby" aria-label="Mascota"></button>
+        <span id="emoteIco"></span>
+      </div>
+      <div id="emotes" class="fila-botones"></div>
+      <div class="fila-botones">
+        <button id="bPersonaje" class="medio">👕 <span class="lbl"></span></button>
+        <button id="bAlbum" class="medio">🏆 <span class="lbl"></span></button>
+      </div>
+    </div>
+    <div id="misiones">
+      <h3 class="lbl-misiones"></h3>
+      <div id="listaDiarias" style="display:flex;flex-direction:column;gap:8px"></div>
+      <button id="bCofre" class="grande"></button>
+      <p id="cofreListo"></p>
+    </div>
+    <div id="modos">
+      <button id="bConstruir" class="modo construir"><span class="ico">🔨</span><b class="lbl"></b><small id="msgArca"></small><div id="arca"></div><span class="jugar"></span></button>
+      <button id="bJugar" class="modo rescate"><span class="ico">🧭</span><b class="lbl"></b><small id="msgRescate"></small><span class="jugar"></span></button>
+    </div>
   </div>
-  <div class="fila-botones">
-    <button id="bPersonaje" class="medio"><span class="mini"></span><span class="lbl"></span></button>
-    <button id="bAlbum" class="medio">🏆 <span class="lbl"></span></button>
-  </div>
+</section>
+
+<section id="pase" class="pantalla">
+  <h2 id="tituloPase"></h2>
+  <div id="paseInfo"><span class="nv"></span><span><span id="paseXp"></span><span class="xpbar" style="margin-top:4px"><span></span></span></span></div>
+  <div id="pista"></div>
+  <p id="paseAyuda"></p>
 </section>
 
 <section id="mundo" class="pantalla">
@@ -175,7 +280,7 @@
   </div>
   <div id="mandos">
     <div class="grupoMando"><button data-k="izq" aria-label="Izquierda">◀</button><button data-k="der" aria-label="Derecha">▶</button></div>
-    <div class="grupoMando columna"><button id="bVista" title="Ver toda el arca">🔭</button><button id="bIrRescatar" title="Rescatar animales">🧭</button></div>
+    <div class="grupoMando columna"><button id="bBaile" title="Bailar">💃</button><button id="bVista" title="Ver toda el arca">🔭</button><button id="bIrRescatar" title="Rescatar animales">🧭</button></div>
     <div class="grupoMando"><button data-k="abajo" aria-label="Bajar">⬇</button><button data-k="arriba" aria-label="Saltar o subir">⬆</button></div>
   </div>
 </section>
@@ -186,6 +291,8 @@
   <h3 class="lbl-cara"></h3><div class="grupo" id="gCaras"></div>
   <h3 class="lbl-gorro"></h3><div class="grupo" id="gGorros"></div>
   <h3 class="lbl-color"></h3><div class="grupo" id="gColores"></div>
+  <h3 class="lbl-mascota"></h3><div class="grupo" id="gMascotas"></div>
+  <h3 class="lbl-estela"></h3><div class="grupo" id="gEstelas"></div>
 </section>
 
 <section id="album" class="pantalla">
@@ -205,6 +312,13 @@
   <div class="texto-grande" id="festejoTexto"></div>
   <div class="texto-grande" id="festejoEstrellas"></div>
   <button class="grande" id="festejoSeguir">👍</button>
+</div></div>
+
+<div id="premio" class="capa"><div class="tarjeta">
+  <div id="rayos"></div>
+  <div id="premioEmo"></div>
+  <div class="texto-grande" id="premioTxt"></div>
+  <button class="grande" id="premioOk">👍</button>
 </div></div>
 
 <div id="final" class="capa"><div class="contenido">
@@ -265,12 +379,15 @@ const LETRAS = 'ABCDEFGHIJLMNOPRSTUVZ';   // sin K, Ñ, Q, W, X, Y para no confu
 
 // ---------- Estado guardado (si el navegador lo permite) ----------
 const DEF = { estrellas: 0, coleccion: {}, madera: 30, mision: 0, obra: '', nivel: 1, arcas: 0,
-              avatar: { cara: '👦', gorro: '🧢', color: '#4dabf7' }, nombre: '', idioma: 'ambos', bienvenida: false };
+              avatar: { cara: '👦', gorro: '🧢', color: '#4dabf7' }, nombre: '', idioma: 'ambos', bienvenida: false,
+              xp: 0, reclamado: 1, mascota: '', estela: '', baileFav: 'saludo', diarias: { fecha: '', ids: [], prog: [], cofre: false } };
 let E;
 try { E = JSON.parse(localStorage.getItem('arca.estado')) || {}; } catch { E = {}; }
 // Versión anterior: las tablas de 10 se convierten en madera para el arca grande
 if (E.madera === undefined && (E.tablas || E.pendientes)) E.madera = 30 + ((E.tablas || 0) + (E.pendientes || 0)) * 25;
 delete E.tablas; delete E.pendientes;
+// Antes del Pase del Arca: lo ya jugado cuenta como XP (hasta el nivel 5), para estrenar premios de una vez
+if (E.xp === undefined && E.estrellas) E.xp = Math.min(550, E.estrellas * 10);
 E = { ...JSON.parse(JSON.stringify(DEF)), ...E, avatar: { ...DEF.avatar, ...(E.avatar || {}) } };
 function guardar() { try { localStorage.setItem('arca.estado', JSON.stringify(E)); } catch {} }
 
@@ -332,6 +449,106 @@ function mostrar(id) {
 function barra() {
   $('cEstrellas').textContent = `⭐ ${E.estrellas}`;
   $('cTablas').textContent = `🪵 ${E.madera}`;
+  const p = pendientesPase();
+  $('cNivel').textContent = `🎫 ${infoNivel().n}${p ? ' 🎁' : ''}`;
+  $('cNivel').classList.toggle('pulsa', p > 0);
+}
+
+// ---------- Pase del Arca: niveles con XP y un premio por nivel (sin compras, todo se gana jugando) ----------
+const BAILES = {
+  saludo:    { emo: '👋', notas: [523, 659, 523, 659] },
+  baile:     { emo: '💃', notas: [523, 659, 784, 659, 523, 659, 784, 1047] },
+  voltereta: { emo: '🤸', notas: [392, 523, 659, 784, 1047] },
+  robot:     { emo: '🤖', notas: [330, 330, 392, 330, 494, 440] },
+  giro:      { emo: '🌀', notas: [784, 659, 523, 659, 784, 988, 1175] },
+};
+const PASE = [   // PASE[n - 1] es el premio del nivel n (el nivel 1 es el inicio)
+  null,
+  { t: 'mascota', v: '🐶' }, { t: 'baile', v: 'baile' },    { t: 'cara', v: '🧑‍🚀' },   { t: 'estela', v: '✨' },
+  { t: 'mascota', v: '🐱' }, { t: 'baile', v: 'voltereta' }, { t: 'gorro', v: '🎧' },   { t: 'cara', v: '🐲' },
+  { t: 'mascota', v: '🦜' }, { t: 'estela', v: '🌈' },      { t: 'baile', v: 'robot' }, { t: 'gorro', v: '🌟' },
+  { t: 'mascota', v: '🐢' }, { t: 'estela', v: '🎵' },      { t: 'cara', v: '🧑‍🚒' },  { t: 'baile', v: 'giro' },
+  { t: 'mascota', v: '🐼' }, { t: 'estela', v: '⭐' },       { t: 'mascota', v: '🕊️' },
+];
+const NIVEL_MAX = PASE.length;
+const NUEVO = { mascota: ['¡Nueva mascota!', 'New pet!'], baile: ['¡Nuevo baile!', 'New dance!'], cara: ['¡Nueva cara!', 'New face!'],
+                gorro: ['¡Nuevo gorro!', 'New hat!'], estela: ['¡Nueva estela!', 'New trail!'] };
+const TIPO_PREMIO = { mascota: ['Mascota', 'Pet'], baile: ['Baile', 'Dance'], cara: ['Cara', 'Face'], gorro: ['Gorro', 'Hat'], estela: ['Estela', 'Trail'] };
+const emoPremio = p => p.t === 'baile' ? BAILES[p.v].emo : p.v;
+const nivelDe = (t, v) => PASE.findIndex(p => p && p.t === t && p.v === v) + 1;
+const tienePremio = (t, v) => { const n = nivelDe(t, v); return n > 0 && n <= E.reclamado; };
+const bailesMios = () => Object.keys(BAILES).filter(k => k === 'saludo' || tienePremio('baile', k));
+const xpNivel = n => 100 + 25 * (n - 1);   // XP para pasar del nivel n al siguiente
+function infoNivel() {
+  let n = 1, x = E.xp;
+  while (n < NIVEL_MAX && x >= xpNivel(n)) { x -= xpNivel(n); n++; }
+  return { n, x, falta: n < NIVEL_MAX ? xpNivel(n) : 0 };
+}
+const pendientesPase = () => Math.max(0, infoNivel().n - E.reclamado);
+function ganarXP(n) {
+  const antes = infoNivel().n;
+  E.xp += n; guardar();
+  const ahora = infoNivel().n;
+  if (ahora > antes) {
+    [523, 784, 1047, 1568].forEach((f, i) => tono(f, 0.4 + i * 0.1, 0.35, 'square', 0.06));
+    setTimeout(() => toast(T(`⬆️ ¡Nivel ${ahora}! 🎁 Abre tu premio en el Pase 🎫`, `⬆️ Level ${ahora}! 🎁 Open your prize in the Pass 🎫`)), 900);
+    if (enObra) flotar(`⬆️ ${T('Nivel', 'Level')} ${ahora}`, mono.x, mono.y + 2.8, '#c4b5fd');
+  }
+  barra();
+}
+
+// ---------- Misiones del día: 3 cada día (una siempre de letras o números) ----------
+const DIARIAS = {
+  rescate: { ico: '🧭', meta: 3,  es: n => `Rescata ${n} animales`,            en: n => `Rescue ${n} animals` },
+  pieza:   { ico: '🔨', meta: 30, es: n => `Pon ${n} piezas en el arca`,       en: n => `Place ${n} ark pieces` },
+  premio:  { ico: '⭐', meta: 5,  es: n => `Atrapa ${n} premios en el arca`,   en: n => `Catch ${n} prizes at the ark` },
+  letra:   { ico: '🔤', meta: 2,  es: n => `Encuentra ${n} letras`,            en: n => `Find ${n} letters` },
+  contar:  { ico: '🔢', meta: 2,  es: n => `Cuenta animales ${n} veces`,       en: n => `Count animals ${n} times` },
+  baile:   { ico: '💃', meta: 2,  es: n => `Baila ${n} veces`,                 en: n => `Dance ${n} times` },
+  mascota: { ico: '🐾', meta: 3,  es: n => `Acaricia a tu mascota ${n} veces`, en: n => `Pet your pet ${n} times` },
+};
+const XP_DIARIA = 60, XP_COFRE = 100;
+const hoy = () => new Date().toLocaleDateString('sv');
+function prepararDiarias() {
+  if (E.diarias.fecha === hoy() && E.diarias.ids.length === 3) return;
+  const terminada = E.mision >= MISIONES.length;
+  const otras = mezclar(Object.keys(DIARIAS).filter(k => k !== 'letra' && k !== 'contar' && !(k === 'pieza' && terminada) && !(k === 'mascota' && !E.mascota)));
+  E.diarias = { fecha: hoy(), ids: mezclar([['letra', 'contar'][azar(2)], ...otras.slice(0, 2)]), prog: [0, 0, 0], cofre: false };
+  guardar();
+}
+function evento(tipo, n = 1) {
+  prepararDiarias();
+  const d = E.diarias;
+  d.ids.forEach((id, i) => {
+    const meta = DIARIAS[id].meta;
+    if (id !== tipo || d.prog[i] >= meta) return;
+    d.prog[i] = Math.min(meta, d.prog[i] + n);
+    if (d.prog[i] < meta) return;
+    E.estrellas += 3; ganarXP(XP_DIARIA);
+    if (enObra) flotar(`🎯 +${XP_DIARIA} XP`, mono.x, mono.y + 2.4, '#c4b5fd');
+    setTimeout(() => {
+      toast(T(`🎯 ¡Misión cumplida! ${DIARIAS[id].ico} +${XP_DIARIA} XP  +3 ⭐`, `🎯 Mission complete! ${DIARIAS[id].ico} +${XP_DIARIA} XP  +3 ⭐`));
+      [659, 880, 1175, 1568].forEach((f, k) => tono(f, k * 0.11, 0.3, 'triangle', 0.13));
+    }, 1600);
+  });
+  guardar();
+}
+const diariasHechas = () => E.diarias.ids.every((id, i) => E.diarias.prog[i] >= DIARIAS[id].meta);
+
+// ---------- Bailes (emotes) ----------
+function bailar(k, enElArca) {
+  const b = BAILES[k]; if (!b) return;
+  audio(); E.baileFav = k;
+  b.notas.forEach((f, i) => tono(f, i * 0.14, 0.22, 'triangle', 0.13));
+  evento('baile');
+  if (enElArca) { mono.emote = { k, t: 0 }; flotar(b.emo, mono.x, mono.y + 2.1); return; }
+  const el = $('avAnim'), ico = $('emoteIco');
+  el.className = ''; ico.classList.remove('ver'); void el.offsetWidth;
+  el.className = 'e-' + k; ico.textContent = b.emo; ico.classList.add('ver');
+}
+function acariciar() {
+  tono(988, 0, 0.1, 'sine', 0.12); tono(1319, 0.08, 0.14, 'sine', 0.12);
+  evento('mascota');
 }
 
 // ---------- El arca (dibujo) ----------
@@ -357,21 +574,121 @@ function pintarInicio() {
   $('titulo').textContent = nombreNino() ? T(`El Arca de ${nombreNino()}`, `${nombreNino()}'s Ark`) : T('El Arca', 'The Ark');
   const terminada = E.mision >= MISIONES.length, puedeConstruir = !terminada && (E.madera > 0 || MISIONES[E.mision].brea);
   $('arca').innerHTML = svgArca(terminada ? TABLAS_ARCA : Math.floor(avanceTotal() * TABLAS_ARCA), terminada, false);
-  $('msgArca').textContent = terminada ? T('🌈 ¡Tu arca está terminada, como Dios le dijo a Noé!', '🌈 Your ark is finished, just as God told Noah!')
-    : puedeConstruir ? T(`🔨 Tienes ${E.madera} 🪵: ¡ve a construir el arca!`, `🔨 You have ${E.madera} 🪵: go build the ark!`)
-    : T('🧭 Rescata animales para ganar madera 🪵', '🧭 Rescue animals to earn wood 🪵');
-  $('bJugar').querySelector('span').textContent = T('Rescatar', 'Rescue');
-  $('bConstruir').querySelector('span').textContent = T('Construir', 'Build');
-  $('bJugar').classList.toggle('pulsa', !puedeConstruir && !terminada);
-  $('bConstruir').classList.toggle('pulsa', puedeConstruir);
-  $('bPersonaje').querySelector('.mini').innerHTML = avatarHTML(E.avatar, 34);
+  $('msgArca').textContent = terminada ? T('🌈 ¡Terminada, como Dios le dijo a Noé!', '🌈 Finished, just as God told Noah!')
+    : `${Math.round(avanceTotal() * 100)} %  ·  🪵 ${E.madera}` + (puedeConstruir ? '' : '  ·  ' + T('rescata para tener madera', 'rescue to get wood'));
+  const total = ANIMALES.filter(a => E.coleccion[a.id]).length;
+  $('msgRescate').textContent = `🐾 ${total} / ${ANIMALES.length}   ·   +${MADERA_RESCATE} 🪵`;
+  $('bJugar').querySelector('.lbl').textContent = T('Rescatar animales', 'Rescue animals');
+  $('bConstruir').querySelector('.lbl').textContent = T('Construir el arca', 'Build the ark');
+  document.querySelectorAll('.modo .jugar').forEach(j => j.textContent = T('▶ Jugar', '▶ Play'));
+  $('bJugar').querySelector('.jugar').classList.toggle('pulsa', !puedeConstruir && !terminada);
+  $('bConstruir').querySelector('.jugar').classList.toggle('pulsa', puedeConstruir);
   $('bPersonaje').querySelector('.lbl').textContent = T('Mi personaje', 'My character');
   $('bAlbum').querySelector('.lbl').textContent = T('Mis animales', 'My animals');
+  pintarLobby();
   barra();
 }
-$('arca').onclick = () => entrarObra();
+function pintarLobby() {
+  const { n, x, falta } = infoNivel(), p = pendientesPase();
+  $('bPase').querySelector('.nv').textContent = n;
+  $('bPase').querySelector('.xpbar span').style.width = (falta ? x / falta * 100 : 100) + '%';
+  $('bPase').querySelector('.lbl').textContent = p ? T(`🎁 ¡Abre tu premio!`, `🎁 Open your prize!`) : T('🎫 Pase del Arca', '🎫 Ark Pass');
+  $('bPase').classList.toggle('pulsa', p > 0);
+  $('avAnim').innerHTML = avatarHTML(E.avatar, Math.min(150, Math.max(100, innerWidth * 0.3)));
+  $('mascotaLobby').textContent = E.mascota;
+  $('mascotaLobby').style.display = E.mascota ? '' : 'none';
+  $('estelaLobby').innerHTML = E.estela ? [18, 34, 50, 66, 82].map((l, k) => `<span style="left:${l}%;animation-delay:${k * 0.5}s">${E.estela}</span>`).join('') : '';
+  const em = $('emotes'); em.innerHTML = '';
+  for (const k of bailesMios()) {
+    const b = document.createElement('button');
+    b.textContent = BAILES[k].emo; b.onclick = () => bailar(k);
+    em.appendChild(b);
+  }
+  // Misiones del día
+  prepararDiarias();
+  document.querySelector('.lbl-misiones').textContent = T('🎯 Misiones de hoy', "🎯 Today's missions");
+  const lista = $('listaDiarias'); lista.innerHTML = '';
+  E.diarias.ids.forEach((id, i) => {
+    const d = DIARIAS[id], prog = E.diarias.prog[i], hecha = prog >= d.meta, b = document.createElement('button');
+    b.className = 'diaria' + (hecha ? ' hecha' : '');
+    b.innerHTML = `<span class="ico">${d.ico}</span><span class="txt"><b>${T(d.es(d.meta), d.en(d.meta))}</b><span class="barraAv" style="display:block"><span style="width:${prog / d.meta * 100}%"></span></span></span><span class="pr">${hecha ? '✅' : `${prog}/${d.meta}`}<br>+${XP_DIARIA} XP</span>`;
+    b.onclick = () => { sfx.pop(); hecha ? di('¡Misión cumplida!', 'Mission complete!') : di(d.es(d.meta), d.en(d.meta)); };
+    lista.appendChild(b);
+  });
+  const cofre = diariasHechas() && !E.diarias.cofre;
+  $('bCofre').style.display = cofre ? '' : 'none';
+  $('bCofre').classList.toggle('pulsa', cofre);
+  $('bCofre').textContent = T('🎁 ¡Abrir el cofre!', '🎁 Open the chest!');
+  $('cofreListo').textContent = E.diarias.cofre ? T('✅ ¡Todo listo! Mañana hay misiones nuevas.', '✅ All done! New missions tomorrow.')
+    : diariasHechas() ? '' : T('Cumple las 3 y abre el cofre 🎁', 'Finish all 3 to open the chest 🎁');
+}
 $('bConstruir').onclick = () => entrarObra();
 $('bJugar').onclick = () => entrarMundo();
+$('avLobby').onclick = () => bailar(bailesMios().includes(E.baileFav) ? E.baileFav : 'saludo');
+$('mascotaLobby').onclick = () => {
+  const m = $('mascotaLobby'); m.classList.remove('salta'); void m.offsetWidth; m.classList.add('salta');
+  acariciar();
+};
+$('mascotaLobby').addEventListener('animationend', e => e.target.classList.remove('salta'));
+$('bCofre').onclick = () => {
+  E.diarias.cofre = true; E.madera += 20; E.estrellas += 5; ganarXP(XP_COFRE);
+  abrirPremio('🎁', `+${XP_COFRE} XP   +20 🪵   +5 ⭐`, '¡Abriste el cofre!', 'You opened the chest!');
+};
+
+// ---------- Pantalla del Pase ----------
+function pintarPase() {
+  const { n, x, falta } = infoNivel();
+  $('tituloPase').textContent = T('🎫 Pase del Arca', '🎫 Ark Pass');
+  $('paseInfo').querySelector('.nv').textContent = n;
+  $('paseXp').textContent = falta ? `${T('Nivel', 'Level')} ${n}  ·  ${x} / ${falta} XP` : T(`Nivel ${n} · ¡Capitán del Arca! 🏆`, `Level ${n} · Ark Captain! 🏆`);
+  $('paseInfo').querySelector('.xpbar span').style.width = (falta ? x / falta * 100 : 100) + '%';
+  const pista = $('pista'); pista.innerHTML = '';
+  for (let L = 1; L <= NIVEL_MAX; L++) {
+    const p = PASE[L - 1], d = document.createElement('div');
+    const estado = L <= E.reclamado ? 'tuyo' : L <= n ? 'listo' : 'bloq';
+    d.className = `nivelP ${estado}` + (L === n ? ' aqui' : '');
+    const nombre = p ? T(...TIPO_PREMIO[p.t]) : T('Inicio', 'Start');
+    d.innerHTML = `<span class="n">${T('Nivel', 'Lv')} ${L}</span><button>${p ? emoPremio(p) : '🚢'}</button><small>${nombre}</small>`;
+    d.querySelector('button').onclick = () => {
+      if (estado === 'listo') reclamar();
+      else if (estado === 'bloq') { sfx.casi(); di(`Llega al nivel ${L}. ¡Juega para ganar puntos!`, `Reach level ${L}. Play to earn points!`); }
+      else if (p?.t === 'baile') bailar(p.v);
+      else sfx.pop();
+    };
+    pista.appendChild(d);
+  }
+  $('paseAyuda').textContent = pendientesPase() ? T('🎁 ¡Toca el premio que brilla!', '🎁 Tap the shining prize!')
+    : T('Gana XP: rescata animales, construye el arca y cumple las misiones de hoy.', 'Earn XP: rescue animals, build the ark and finish today’s missions.');
+  requestAnimationFrame(() => pista.children[Math.min(E.reclamado, n - 1)]?.scrollIntoView({ inline: 'center', block: 'nearest' }));
+}
+function reclamar() {
+  const L = E.reclamado + 1;
+  if (L > infoNivel().n) return;
+  const p = PASE[L - 1];
+  E.reclamado = L;
+  if (p.t === 'mascota') E.mascota = p.v;      // se pone solo, para verlo de inmediato
+  else if (p.t === 'estela') E.estela = p.v;
+  else if (p.t === 'cara') E.avatar.cara = p.v;
+  else if (p.t === 'gorro') E.avatar.gorro = p.v;
+  else E.baileFav = p.v;
+  guardar(); barra();
+  const [es, en] = NUEVO[p.t], capitan = L === NIVEL_MAX;
+  abrirPremio(emoPremio(p), T(es, en) + (capitan ? '  ' + T('🏆 ¡Capitán del Arca!', '🏆 Ark Captain!') : ''), es + (capitan ? ' ¡Eres el capitán del arca!' : ''), en + (capitan ? ' You are the ark captain!' : ''));
+  if (p.t === 'baile') setTimeout(() => BAILES[p.v].notas.forEach((f, i) => tono(f, i * 0.14, 0.22, 'triangle', 0.13)), 900);
+}
+function abrirPremio(emo, txt, es, en) {
+  $('premioEmo').textContent = emo; $('premioTxt').textContent = txt;
+  const e = $('premioEmo'); e.style.animation = 'none'; void e.offsetWidth; e.style.animation = '';
+  $('premio').classList.add('abierta'); sfx.fanfarria();
+  setTimeout(() => di(es, en), 400);
+}
+$('premioOk').onclick = () => {
+  $('premio').classList.remove('abierta');
+  if ($('pase').classList.contains('activa')) pintarPase(); else pintarInicio();
+};
+const irPase = () => { cerrarCapas(); pintarPase(); mostrar('pase'); };
+$('bPase').onclick = irPase;
+$('cNivel').onclick = irPase;
 $('bInicio').onclick = () => { cerrarCapas(); pintarInicio(); mostrar('inicio'); };
 $('bPersonaje').onclick = () => { pintarPersonaje(); mostrar('personaje'); };
 $('bAlbum').onclick = () => { pintarAlbum(); mostrar('album'); };
@@ -380,7 +697,7 @@ $('bAlbum').onclick = () => { pintarAlbum(); mostrar('album'); };
 const campo = $('campo'), explorador = $('explorador');
 let arbustos = [], ocupado = false, pos = { x: 50, y: 86 };
 function pintarExplorador() {
-  explorador.innerHTML = avatarHTML(E.avatar, Math.max(56, Math.min(innerWidth, innerHeight) * 0.13));
+  explorador.innerHTML = avatarHTML(E.avatar, Math.max(56, Math.min(innerWidth, innerHeight) * 0.13)) + (E.mascota ? `<span class="mascotaMundo">${E.mascota}</span>` : '');
   explorador.style.left = pos.x + '%'; explorador.style.top = pos.y + '%';
 }
 function caminar(x, y) {
@@ -508,6 +825,7 @@ function responder(b, correcta) {
     decir([{ l, t: l === 'es' ? `${seq}. ¡${n}!` : `${seq}. ${n}!` }]);
   }
   const primera = reto.intentos === 0, arbusto = reto.arbusto, espera = reto.tipo === 'contar' ? 1800 : 1300;
+  evento(reto.tipo);
   reto = null;
   setTimeout(() => { $('reto').classList.remove('abierta'); rescatar(arbusto, primera); }, espera);
 }
@@ -521,14 +839,16 @@ function rescatar(arbusto, primera) {
   const ganadas = primera ? 2 : 1;
   racha = primera ? racha + 1 : 0;
   const bonoRacha = racha > 0 && racha % 3 === 0 ? 10 : 0;   // 3 aciertos seguidos a la primera: madera extra
+  const xp = primera ? 35 : 25;
   E.estrellas += ganadas; E.madera += MADERA_RESCATE + bonoRacha; guardar(); barra();
+  ganarXP(xp); evento('rescate');
   if (bonoRacha) setTimeout(() => toast(T(`🔥 ¡${racha} seguidos! +${bonoRacha} 🪵`, `🔥 ${racha} in a row! +${bonoRacha} 🪵`)), 600);
   clearTimeout(tFestejo); tFestejo = setTimeout(() => $('festejo').classList.contains('abierta') && $('festejoSeguir').click(), 3000);   // sigue solo
   arbusto.el.remove(); arbustos = arbustos.filter(b => b !== arbusto);
   const los = a.g === 'f' ? 'las' : 'los';
   $('festejoPareja').textContent = a.emo + a.emo;
   $('festejoTexto').textContent = T(`¡Rescataste a ${los} ${a.es[1]}!`, `You rescued the ${a.en[1]}!`);
-  $('festejoEstrellas').textContent = `+${ganadas} ⭐   +${MADERA_RESCATE + bonoRacha} 🪵`;
+  $('festejoEstrellas').textContent = `+${ganadas} ⭐   +${MADERA_RESCATE + bonoRacha} 🪵   +${xp} XP`;
   $('festejo').classList.add('abierta');
   sfx.fanfarria();
   setTimeout(() => di(`¡Rescataste a ${los} ${a.es[1]}!`, `You rescued the ${a.en[1]}!`), 300);
@@ -564,7 +884,8 @@ function finalArca() {
 $('bNuevaArca').onclick = () => {
   E.arcas++; E.estrellas += 5; E.nivel = Math.min(3, E.nivel + 1); guardar();
   $('final').classList.remove('abierta', 'sol');
-  toast(T('+5 ⭐ ¡Nivel nuevo!', '+5 ⭐ New level!'));
+  toast(T('+5 ⭐ +100 XP ¡Retos más difíciles!', '+5 ⭐ +100 XP Harder challenges!'));
+  ganarXP(100);
   pintarInicio(); mostrar('inicio');
 };
 
@@ -574,22 +895,31 @@ function pintarPersonaje() {
   document.querySelector('.lbl-cara').textContent = T('Cara', 'Face');
   document.querySelector('.lbl-gorro').textContent = T('Gorro', 'Hat');
   document.querySelector('.lbl-color').textContent = T('Color', 'Color');
-  $('vistaAvatar').innerHTML = avatarHTML(E.avatar, 120);
-  const grupo = (cont, lista, campo) => {
+  document.querySelector('.lbl-mascota').textContent = T('Mascota', 'Pet');
+  document.querySelector('.lbl-estela').textContent = T('Estela', 'Trail');
+  $('vistaAvatar').innerHTML = avatarHTML(E.avatar, 120) + (E.mascota ? `<span style="font-size:64px;margin-left:8px">${E.mascota}</span>` : '');
+  // Cada opción: con estrellas (se desbloquea sola) o del Pase del Arca (hay que llegar al nivel)
+  const porEstrellas = lista => lista.map(([v, precio]) => ({ v, bloq: precio > E.estrellas, etq: `🔒 ⭐${precio}`,
+    voz: [`Necesitas ${precio} estrellas. ¡Rescata más animales!`, `You need ${precio} stars. Rescue more animals!`] }));
+  const delPase = t => PASE.filter(p => p?.t === t).map(p => { const n = nivelDe(t, p.v);
+    return { v: p.v, bloq: !tienePremio(t, p.v), etq: `🎫 ${n}`, voz: [`Llega al nivel ${n} del Pase.`, `Reach level ${n} of the Pass.`] }; });
+  const grupo = (cont, items, actual, elegir) => {
     cont.innerHTML = '';
-    for (const [emo, precio] of lista) {
-      const b = document.createElement('button'), bloq = precio > E.estrellas;
-      b.className = 'item' + (E.avatar[campo] === emo ? ' sel' : '') + (bloq ? ' bloq' : '');
-      b.innerHTML = (emo || '🚫') + (bloq ? `<span class="precio">🔒 ⭐${precio}</span>` : '');
+    for (const it of items) {
+      const b = document.createElement('button');
+      b.className = 'item' + (actual === it.v ? ' sel' : '') + (it.bloq ? ' bloq' : '');
+      b.innerHTML = (it.v || '🚫') + (it.bloq ? `<span class="precio">${it.etq}</span>` : '');
       b.onclick = () => {
-        if (bloq) { sfx.casi(); di(`Necesitas ${precio} estrellas. ¡Rescata más animales!`, `You need ${precio} stars. Rescue more animals!`); return; }
-        E.avatar[campo] = emo; guardar(); sfx.pop(); pintarPersonaje();
+        if (it.bloq) { sfx.casi(); di(...it.voz); return; }
+        elegir(it.v); guardar(); sfx.pop(); pintarPersonaje();
       };
       cont.appendChild(b);
     }
   };
-  grupo($('gCaras'), CARAS, 'cara');
-  grupo($('gGorros'), GORROS, 'gorro');
+  grupo($('gCaras'), [...porEstrellas(CARAS), ...delPase('cara')], E.avatar.cara, v => E.avatar.cara = v);
+  grupo($('gGorros'), [...porEstrellas(GORROS), ...delPase('gorro')], E.avatar.gorro, v => E.avatar.gorro = v);
+  grupo($('gMascotas'), [{ v: '' }, ...delPase('mascota')], E.mascota, v => E.mascota = v);
+  grupo($('gEstelas'), [{ v: '' }, ...delPase('estela')], E.estela, v => E.estela = v);
   $('gColores').innerHTML = '';
   for (const c of COLORES) {
     const b = document.createElement('button');
@@ -781,7 +1111,13 @@ function dibujarPieza(p, estado, pulso) {
 function dibujarMono() {
   const px = sx(mono.x), py = sy(mono.y), h = mono.h * TS, av = E.avatar;
   cx.save(); cx.translate(px, py);
+  const em = mono.emote, q = em ? em.t / 1.4 : 0;   // el baile que está haciendo (0 → 1)
+  if (em?.k === 'voltereta') { cx.translate(0, -Math.sin(q * Math.PI) * h * 0.9 - h / 2); cx.rotate(q * Math.PI * 2); cx.translate(0, h / 2); }
+  else if (em?.k === 'baile') { cx.translate(0, -Math.abs(Math.sin(q * Math.PI * 6)) * h * 0.15); cx.rotate(Math.sin(q * Math.PI * 6) * 0.25); }
+  else if (em?.k === 'giro') { cx.translate(0, -Math.sin(q * Math.PI) * h * 0.4); cx.scale(Math.cos(q * Math.PI * 4), 1); }
+  else if (em?.k === 'robot') cx.translate(Math.round(Math.sin(q * Math.PI * 8)) * h * 0.08, Math.round(Math.sin(q * Math.PI * 4)) * -h * 0.05);
   if (mono.mira < 0) cx.scale(-1, 1);
+  if (em?.k === 'saludo') emoji('👋', h * 0.38, -h * 0.85 + Math.sin(q * Math.PI * 8) * h * 0.06, h * 0.3);
   const balanceo = Math.sin(mono.paso) * 0.35 * (mono.vx && mono.suelo ? 1 : 0);
   cx.strokeStyle = '#1f2937'; cx.lineWidth = Math.max(3, TS * 0.08); cx.lineCap = 'round';
   cx.beginPath();
@@ -848,7 +1184,9 @@ function dibujarObra(dt) {
     if (p.dir > 0) cx.scale(-1, 1);   // los emojis de animales miran a la izquierda
     emoji(p.a.emo, 0, 0, TS * 0.8); cx.restore();
   }
+  dibujarEstela();
   dibujarMono();
+  dibujarMascota(ahora);
   // Textos que suben: +1 ⭐, 🔥 x10
   textos = textos.filter(t => (t.vida -= dt * 0.8) > 0);
   cx.textAlign = 'center'; cx.textBaseline = 'middle';
@@ -865,8 +1203,53 @@ function bucleObra(t) {
   if (!enObra) return;
   const dt = Math.min(0.05, (t - tAnterior) / 1000 || 0); tAnterior = t;
   moverMono(dt); autoConstruir(dt); sembrarPremios(dt); recogerPremios(); moverPaseantes(dt);
+  if (mono.emote && (mono.emote.t += dt) > 1.4) mono.emote = null;
+  moverMascota(dt); moverEstela(dt);
   dibujarObra(dt);
   requestAnimationFrame(bucleObra);
+}
+
+// ---------- La mascota sigue al monito y la estela deja chispas al caminar ----------
+const mascota = { x: MARGEN - 4, y: 0, dir: 1, salto: 0 };
+const vuela = e => e === '🦜' || e === '🕊️';
+const altoMascota = () => vuela(E.mascota) ? 1.4 : 0.3;
+function moverMascota(dt) {
+  if (!E.mascota) return;
+  const meta = mono.x - mono.mira * 0.9;
+  if (Math.abs(meta - mascota.x) > 8) { mascota.x = meta; mascota.y = mono.y; }
+  const vx = (meta - mascota.x) * Math.min(1, dt * 3);
+  if (Math.abs(vx) > 0.002) mascota.dir = Math.sign(vx);
+  mascota.x += vx; mascota.y += (mono.y - mascota.y) * Math.min(1, dt * 4);
+  mascota.salto = Math.max(0, mascota.salto - dt * 2);
+}
+function dibujarMascota(ahora) {
+  if (!E.mascota) return;
+  const bote = vuela(E.mascota) ? Math.sin(ahora * 4) * 0.15 : Math.abs(Math.sin(ahora * 9)) * (mono.vx ? 0.15 : 0.03);
+  cx.save(); cx.translate(sx(mascota.x), sy(mascota.y + altoMascota() + bote + Math.sin(mascota.salto * Math.PI) * 0.8));
+  if (mascota.dir > 0) cx.scale(-1, 1);
+  emoji(E.mascota, 0, 0, TS * 0.6); cx.restore();
+}
+function tocarMascota(px, py) {
+  if (!E.mascota) return false;
+  const wx = px / TS + camX, wy = (baseY - py) / TS;
+  if (Math.hypot(wx - mascota.x, wy - mascota.y - altoMascota()) > 0.7) return false;
+  mascota.salto = 1; acariciar(); flotar('💗', mascota.x, mascota.y + altoMascota() + 0.6);
+  return true;
+}
+let chispas = [], tChispa = 0;
+function moverEstela(dt) {
+  chispas = chispas.filter(c => (c.vida -= dt) > 0);
+  if (!E.estela || !(mono.vx || !mono.suelo || mono.emote) || (tChispa -= dt) > 0) return;
+  tChispa = 0.07;
+  chispas.push({ x: mono.x - mono.mira * 0.25 + (Math.random() - 0.5) * 0.3, y: mono.y + 0.2 + Math.random() * 0.7, vida: 0.7, h: (performance.now() / 3) % 360 });
+}
+function dibujarEstela() {
+  for (const c of chispas) {
+    cx.globalAlpha = Math.min(1, c.vida * 1.6);
+    if (E.estela === '🌈') { cx.fillStyle = `hsl(${c.h} 90% 60%)`; cx.beginPath(); cx.arc(sx(c.x), sy(c.y), TS * 0.1, 0, 7); cx.fill(); }
+    else emoji(E.estela, sx(c.x), sy(c.y), TS * 0.28 * (0.5 + c.vida));
+  }
+  cx.globalAlpha = 1;
 }
 
 // ---------- Construir: el monito construye al pasar, o tocando el plano ----------
@@ -907,6 +1290,7 @@ function ponerPieza(p) {
   }
   if (combo >= 5 && combo % 5 === 0) flotar(`🔥 x${combo}`, mono.x, mono.y + 2, '#fde047');
   sacudida = 0.12;
+  ganarXP(1); evento('pieza');
   // Mini festejo cada 25 % de la misión
   const h = hAntes + 1;
   if (h < total && Math.floor(h / total * 4) > Math.floor(hAntes / total * 4)) {
@@ -946,7 +1330,7 @@ function recogerPremios() {
     if (Math.hypot(pr.x - cxm, pr.y - cym) > 0.8) return true;
     if (pr.tipo === 'estrella') { E.estrellas++; flotar('+1 ⭐', pr.x, pr.y + 0.5, '#fde047'); tono(1319, 0, 0.12, 'sine', 0.12); tono(1760, 0.08, 0.18, 'sine', 0.12); }
     else { E.madera += 3; flotar('+3 🪵', pr.x, pr.y + 0.5, '#fbbf24'); tono(784, 0, 0.1, 'triangle', 0.12); tono(1047, 0.08, 0.15, 'triangle', 0.12); }
-    barra(); pintarMision(); return false;
+    ganarXP(3); evento('premio'); pintarMision(); return false;
   });
 }
 function prepararPaseantes() {   // los animales rescatados esperan y caminan junto al arca
@@ -978,8 +1362,8 @@ function sinMadera() {
 }
 function completarMision() {
   const hecha = MISIONES[E.mision];
-  E.mision++; E.estrellas += 5; guardarObra(); barra(); sfx.fanfarria();
-  toast(T(`✅ ¡${hecha.tit[0]}: listo! +5 ⭐`, `✅ ${hecha.tit[1]}: done! +5 ⭐`));
+  E.mision++; E.estrellas += 5; guardarObra(); ganarXP(50); sfx.fanfarria();
+  toast(T(`✅ ¡${hecha.tit[0]}: listo! +5 ⭐ +50 XP`, `✅ ${hecha.tit[1]}: done! +5 ⭐ +50 XP`));
   pintarMision();
   if (E.mision >= MISIONES.length) { setTimeout(finalArca, 1500); return; }
   setTimeout(decirMision, 1600);
@@ -1004,7 +1388,7 @@ function pintarMision() {
 let dedoAbajo = false;
 lienzo.addEventListener('pointerdown', e => {
   audio();
-  if (tocarPaseante(e.clientX, e.clientY)) return;
+  if (tocarMascota(e.clientX, e.clientY) || tocarPaseante(e.clientX, e.clientY)) return;
   dedoAbajo = true; lienzo.setPointerCapture?.(e.pointerId); construirEn(e.clientX, e.clientY);
 });
 lienzo.addEventListener('pointermove', e => { if (dedoAbajo) construirEn(e.clientX, e.clientY); });
@@ -1026,7 +1410,8 @@ addEventListener('keydown', e => {
 });
 addEventListener('keyup', e => { const k = MAPA_TECLAS[e.code]; if (k) teclas[k] = false; });
 $('bVista').onclick = () => { vista = !vista; $('bVista').classList.toggle('on', vista); medirObra(); };
-$('bIrRescatar').onclick = () => { $('bIrRescatar').classList.remove('pulsa'); entrarMundo(); };
+$('bBaile').onclick = () => bailar(bailesMios().includes(E.baileFav) ? E.baileFav : 'saludo', true);
+$('bIrRescatar').onclick =() => { $('bIrRescatar').classList.remove('pulsa'); entrarMundo(); };
 $('misionOir').onclick = () => { const m = MISIONES[E.mision]; m ? di(m.es, m.en) : di(FIN_OBRA.es, FIN_OBRA.en); };
 
 function entrarObra() {
@@ -1077,7 +1462,7 @@ $('bReiniciar').onclick = () => {
   arbustos.forEach(b => b.el.remove()); arbustos = [];
   guardar(); $('panel').classList.remove('abierta'); pintarInicio(); mostrar('inicio');
 };
-function cerrarCapas() { ['reto', 'festejo'].forEach(id => $(id).classList.remove('abierta')); reto = null; ocupado = false; }
+function cerrarCapas() { ['reto', 'festejo', 'premio'].forEach(id => $(id).classList.remove('abierta')); reto = null; ocupado = false; }
 
 pintarInicio();
 </script>
